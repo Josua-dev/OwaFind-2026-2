@@ -11,10 +11,37 @@ export function AuditLogPage() {
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    auditService.getAuditEvents().then((e) => { setEvents(e); setLoading(false); });
+    const loadAuditEvents = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const eventData = await auditService.getAuditEvents();
+        setEvents(eventData);
+      } catch (err) {
+        console.error('Failed to load audit events:', err);
+        setError('Failed to load audit log data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAuditEvents();
   }, []);
+
+  if (loading) return <div className="animate-shimmer h-96 rounded-xl" />;
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Alert tone="error" title="Error Loading Audit Log">
+          {error}
+        </Alert>
+      </div>
+    );
+  }
 
   const filtered = events.filter((e) =>
     !query || e.action.toLowerCase().includes(query.toLowerCase()) ||
@@ -29,14 +56,17 @@ export function AuditLogPage() {
         <p className="text-slate-500 mt-1">All system and user actions are tracked</p>
       </div>
 
+      <Alert tone="info" title="Audit Log Data Source">
+        This page displays audit events from the Pension Funds API.
+        Currently, audit event data is not available through the API endpoint.
+      </Alert>
+
       <Input placeholder="Search audit events..." value={query} onChange={(e) => setQuery(e.target.value)} icon={<Search className="w-4 h-4" />} />
 
       <Card>
         <CardHeader title="Activity Log" subtitle={`${filtered.length} events`} />
         <CardBody className="p-0">
-          {loading ? (
-            <div className="space-y-2 p-4">{[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="animate-shimmer h-16 rounded-lg" />)}</div>
-          ) : (
+          {events.length > 0 ? (
             <div className="divide-y divide-slate-50">
               {filtered.map((event) => (
                 <div key={event.id} className="flex items-start gap-3 p-4">
@@ -52,6 +82,13 @@ export function AuditLogPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-slate-500">No audit events available from the Pension Funds API.</p>
+              <p className="text-xs text-slate-400 mt-2">
+                Audit logging will be available when the API endpoint is implemented.
+              </p>
             </div>
           )}
         </CardBody>

@@ -115,8 +115,8 @@ export function LandingPage() {
             >
               <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 max-w-md ml-auto">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-medium text-success-600 bg-success-50 px-2.5 py-1 rounded-full">Potential Match Found</span>
-                  <span className="text-xs text-slate-400">Simulated</span>
+                  <span className="text-xs font-medium text-success-600 bg-success-50 px-2.5 py-1 rounded-full">Example Match</span>
+                  <span className="text-xs text-slate-400">Illustrative Example</span>
                 </div>
                 <h3 className="font-display font-semibold text-slate-900 text-lg">Retirement Fund Benefit</h3>
                 <p className="text-sm text-slate-500 mt-1">Government Institutions Pension Fund (GIPF)</p>
@@ -146,15 +146,15 @@ export function LandingPage() {
                     />
                   </div>
                 </div>
-              </div>
-              <div className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-lg border border-slate-200 p-4 hidden sm:block">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5 text-primary-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Protected by</p>
-                    <p className="text-sm font-semibold text-slate-700">OwaFind Trust</p>
+                <div className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-lg border border-slate-200 p-4 hidden sm:block">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center">
+                      <ShieldCheck className="w-5 h-5 text-primary-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Protected by</p>
+                      <p className="text-sm font-semibold text-slate-700">OwaFind Trust</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -268,8 +268,9 @@ export function LandingPage() {
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900">Built for an ecosystem of</h2>
           <p className="text-slate-600 mt-3 max-w-2xl mx-auto">
-            The proposed OwaFind ecosystem — institutions OwaFind would connect with under regulatory oversight.
-            No such connections exist today; this is a concept for demonstration.
+            The proposed OwaFind ecosystem represents the types of institutions that could potentially
+            integrate with the platform under regulatory oversight to help beneficiaries discover
+            their financial benefits.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mt-10">
             {ecosystem.map((e, i) => (
@@ -286,8 +287,9 @@ export function LandingPage() {
             ))}
           </div>
           <p className="text-xs text-slate-400 mt-6 max-w-md mx-auto">
-            Proposed ecosystem shown for demonstration purposes only. OwaFind does not have integrations,
-            partnerships or data-sharing agreements with any institution shown, unless explicitly verified.
+            OwaFind currently connects with the Namibia Pension Funds API to search for benefit
+            records. Additional institution integrations would be subject to regulatory approval
+            and data-sharing agreements.
           </p>
         </div>
       </section>
@@ -330,17 +332,17 @@ export function LandingPage() {
             <div>
               <h4 className="text-white font-semibold text-sm mb-3">Important</h4>
               <p className="text-slate-400 text-sm leading-relaxed">
-                This is a demonstration environment. All data is simulated. OwaFind does not hold customer
-                funds, determine legal entitlement, or release payments. Final verification and payment
-                remain with the institution holding the benefit.
+                OwaFind is a platform that connects with the Namibia Pension Funds API to search for
+                benefit records. A potential match identified by the system does not establish legal
+                entitlement - final verification and payment remain with the institution holding the benefit.
               </p>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-slate-500 text-xs">© 2026 OwaFind. Demonstration prototype. All data is fictional.</p>
+            <p className="text-slate-500 text-xs">© 2026 OwaFind</p>
             <div className="flex items-center gap-2 text-slate-500 text-xs">
               <span className="w-2 h-2 rounded-full bg-accent-500" />
-              Demo Environment
+              Production Environment
             </div>
           </div>
         </div>

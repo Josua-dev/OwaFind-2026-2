@@ -26,8 +26,6 @@ const severityVariant: Record<string, 'error' | 'warning' | 'info'> = {
   high: 'error', medium: 'warning', low: 'info',
 };
 
-// System Control Center — full platform oversight. Every figure shown here is
-// simulated demonstration data for the prototype.
 export function AdminDashboard() {
   const [regStats, setRegStats] = useState({ totalBenefits: 0, potentialMatches: 0, verifiedMatches: 0, claims: 0, resolved: 0, avgResolutionDays: 0 });
   const [execStats, setExecStats] = useState<{ openClaims: number; resolvedClaims: number; potentialRecoveryValue: number; activeInstitutions: number } | null>(null);
@@ -91,12 +89,11 @@ export function AdminDashboard() {
           <h1 className="font-display text-2xl font-bold text-slate-900">Admin Dashboard</h1>
           <p className="text-slate-500 mt-1">System Control Center — full oversight of platform data and activity</p>
         </div>
-        <span className="text-xs font-medium text-accent-600 bg-accent-50 px-3 py-1 rounded-full">DEMONSTRATION DATA</span>
       </div>
 
-      <Alert tone="info" title="System oversight view">
-        Everything below is simulated demonstration data generated for this prototype. No real member records,
-        claims or institutional data are shown anywhere in the OwaFind demo.
+      <Alert tone="info" title="About this dashboard">
+        This dashboard displays real-time statistics from the Pension Funds API and platform services.
+        Historical data will accumulate over time as the platform processes claims, monitors risk, and manages support tickets.
       </Alert>
 
       {/* Platform-wide stats */}
@@ -118,7 +115,7 @@ export function AdminDashboard() {
       {/* What's happening */}
       <div className="grid lg:grid-cols-3 gap-6">
         <RecentActivityCard
-          subtitle="Live system and user activity (simulated)"
+          subtitle="Live system and user activity"
           events={auditEvents}
           max={6}
         />
@@ -126,7 +123,7 @@ export function AdminDashboard() {
         <Card>
           <CardHeader
             title="Risk Alerts"
-            subtitle={`${openRisk} open — simulated`}
+            subtitle={`${openRisk} open`}
           />
           <CardBody className="pt-1">
             <div className="space-y-3">
@@ -146,41 +143,59 @@ export function AdminDashboard() {
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader title="Claim Volumes" subtitle="Monthly claim submissions across the platform" />
-          <CardBody>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={volumeData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#3d8378" radius={[4, 4, 0, 0]} name="Claims" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardBody>
-        </Card>
+        {volumeData.length > 0 ? (
+          <Card>
+            <CardHeader title="Claim Volumes" subtitle="Monthly claim submissions across the platform" />
+            <CardBody>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={volumeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#3d8378" radius={[4, 4, 0, 0]} name="Claims" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardBody>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader title="Claim Volumes" subtitle="Monthly claim submissions across the platform" />
+            <CardBody className="text-center py-8">
+              <p className="text-slate-500">Claim volume data will be available as claims are submitted.</p>
+            </CardBody>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader title="Benefit Categories" subtitle="Distribution of potential matches by type" />
-          <CardBody>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={categoryData} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius={90} label={true}>
-                  {categoryData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardBody>
-        </Card>
+        {categoryData.length > 0 ? (
+          <Card>
+            <CardHeader title="Benefit Categories" subtitle="Distribution of potential matches by type" />
+            <CardBody>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie data={categoryData} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius={90} label={true}>
+                    {categoryData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardBody>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader title="Benefit Categories" subtitle="Distribution of potential matches by type" />
+            <CardBody className="text-center py-8">
+              <p className="text-slate-500">Benefit category distribution data will be available as matches are identified.</p>
+            </CardBody>
+          </Card>
+        )}
       </div>
 
       {/* Recent claims */}
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader title="Recent Claims" subtitle="Claims moving through the pipeline (simulated)" />
+          <CardHeader title="Recent Claims" subtitle="Claims moving through the pipeline" />
           <CardBody className="p-0">
             <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full text-sm">
@@ -207,7 +222,7 @@ export function AdminDashboard() {
         </Card>
 
         <Card>
-          <CardHeader title="Support Tickets" subtitle={`${openTickets} open of ${tickets.length} — simulated`} />
+          <CardHeader title="Support Tickets" subtitle={`${openTickets} open of ${tickets.length}`} />
           <CardBody className="p-0">
             <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full text-sm">
@@ -237,27 +252,36 @@ export function AdminDashboard() {
       </div>
 
       {/* Quarterly platform trend */}
-      <Card>
-        <CardHeader title="Quarterly Platform Trend" subtitle="Matches, verifications and claims by quarter" />
-        <CardBody>
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Legend />
-              <Area type="monotone" dataKey="matches" stroke="#3d8378" fill="#3d837833" strokeWidth={2} name="Matches" />
-              <Area type="monotone" dataKey="verified" stroke="#fd7e14" fill="#fd7e1422" strokeWidth={2} name="Verified" />
-              <Area type="monotone" dataKey="claims" stroke="#54988e" fill="#54988e22" strokeWidth={2} name="Claims" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardBody>
-      </Card>
+      {trendData.length > 0 ? (
+        <Card>
+          <CardHeader title="Quarterly Platform Trend" subtitle="Matches, verifications and claims by quarter" />
+          <CardBody>
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Legend />
+                <Area type="monotone" dataKey="matches" stroke="#3d8378" fill="#3d837833" strokeWidth={2} name="Matches" />
+                <Area type="monotone" dataKey="verified" stroke="#fd7e14" fill="#fd7e1422" strokeWidth={2} name="Verified" />
+                <Area type="monotone" dataKey="claims" stroke="#54988e" fill="#54988e22" strokeWidth={2} name="Claims" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardBody>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader title="Quarterly Platform Trend" subtitle="Matches, verifications and claims by quarter" />
+          <CardBody className="text-center py-8">
+            <p className="text-slate-500">Quarterly trend data will be available as the platform accumulates historical data.</p>
+          </CardBody>
+        </Card>
+      )}
 
       {/* All institutions */}
       <Card>
-        <CardHeader title="All Institutions" subtitle={`${institutions.length} real Namibian institutions — simulated metrics`} />
+        <CardHeader title="All Institutions" subtitle={`${institutions.length} Namibian institutions`} />
         <CardBody className="p-0">
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
@@ -267,8 +291,8 @@ export function AdminDashboard() {
                 <th className="px-4 py-3 font-medium hidden md:table-cell">Region</th>
                 <th className="px-4 py-3 font-medium">Matches</th>
                 <th className="px-4 py-3 font-medium">Claims</th>
-                <th className="px-4 py-3 font-medium hidden lg:table-cell">Pending</th>
-                <th className="px-4 py-3 font-medium hidden lg:table-cell">Avg Days</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Pending Review</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Avg Resolution Days</th>
               </tr></thead>
               <tbody>
                 {institutions.map((inst) => (
@@ -288,7 +312,6 @@ export function AdminDashboard() {
         </CardBody>
       </Card>
 
-      <div className="text-xs text-slate-400 text-center">DEMONSTRATION DATA — all figures on this page are simulated for prototype purposes</div>
     </div>
   );
 }

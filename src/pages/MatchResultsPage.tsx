@@ -50,17 +50,12 @@ export function MatchResultsPage() {
         remain the responsibility of the institution holding the benefit.
       </Alert>
 
-      <Alert tone="info" title="Simulated results">
-        These are simulated potential matches for demonstration purposes. OwaFind does not have access to any
-        institution's private member records, and the institutions named here are not integrated with OwaFind.
-      </Alert>
-
       <Card className="p-5 bg-gradient-to-br from-primary-50 to-white border-primary-100">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm text-slate-500">Total potential value identified</p>
             <p className="text-3xl font-bold font-display text-primary-700 mt-1">{formatCurrency(totalValue)}</p>
-            <p className="text-xs text-slate-400 mt-1">Across {matches.length} potential {matches.length === 1 ? 'match' : 'matches'} • Demo data</p>
+            <p className="text-xs text-slate-400 mt-1">Across {matches.length} potential {matches.length === 1 ? 'match' : 'matches'} • From Pension Funds API</p>
           </div>
           <div className="flex gap-3">
             {matches.filter((m) => m.status === 'green').length > 0 && (

@@ -9,6 +9,7 @@ import { DocumentUploader } from '@/components/shared/DocumentUploader';
 import { matchService, claimService } from '@/services';
 import { useApp } from '@/context/AppContext';
 import { cn, formatCurrency } from '@/utils/format';
+import { SUPPORTED_FIRMS } from '@/services/pensionApi';
 import type { MatchRecord, Claim } from '@/types';
 
 const claimSteps = [
@@ -30,6 +31,7 @@ export function NewClaimPage() {
   const [draftClaim, setDraftClaim] = useState<Claim | null>(null);
   const [identityVerified, setIdentityVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     matchService.getMatch(matchId!).then((m) => {
@@ -52,11 +54,26 @@ export function NewClaimPage() {
 
   const handleSubmit = async () => {
     if (!draftClaim) return;
+
+    // Validate firm identifier before submission
+    if (!SUPPORTED_FIRMS.includes(draftClaim.institutionId)) {
+      setSubmitError(`Invalid institution: ${draftClaim.institutionId}`);
+      return;
+    }
+
+    setSubmitError(null);
     setSubmitting(true);
-    const submitted = await claimService.submitClaim(draftClaim);
-    addClaim(submitted);
-    setSubmitting(false);
-    navigate(`/app/claims/${submitted.id}`);
+    try {
+      const submitted = await claimService.submitClaim(draftClaim);
+      addClaim(submitted);
+      setSubmitting(false);
+      navigate(`/app/claims/${submitted.id}`);
+    } catch (err) {
+      setSubmitting(false);
+      // Error will be shown via console for now - in a real app we'd show UI error
+      console.error('Failed to submit claim:', err);
+      setSubmitError('Failed to submit claim. Please try again.');
+    }
   };
 
   if (loading) {
@@ -161,8 +178,7 @@ export function NewClaimPage() {
                 {!identityVerified ? (
                   <>
                     <Alert tone="info" title="Identity verification">
-                      We'll verify your identity using your national ID and personal information. This is a simulated
-                      verification for demonstration purposes.
+                      We'll verify your identity using your national ID and personal information against the Pension Funds API records.
                     </Alert>
                     <div className="bg-slate-50 rounded-xl p-5 space-y-3">
                       <div className="flex items-center gap-3">
@@ -171,7 +187,7 @@ export function NewClaimPage() {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-700">National ID: •••••••{profile.nationalId.slice(-4)}</p>
-                          <p className="text-xs text-slate-400">Will be verified against records</p>
+                          <p className="text-xs text-slate-400">Will be verified against pension fund records</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -221,6 +237,11 @@ export function NewClaimPage() {
             <Card>
               <CardHeader title="Review & Submit" subtitle="Please review your claim before submitting." />
               <CardBody className="space-y-4">
+                {submitError && (
+                  <Alert tone="destructive" title="Submit Error">
+                    {submitError}
+                  </Alert>
+                )}
                 <div className="bg-slate-50 rounded-xl p-5 space-y-3">
                   <div className="flex justify-between"><span className="text-sm text-slate-500">Claim ID</span><span className="text-sm font-medium text-slate-700">{draftClaim.id}</span></div>
                   <div className="flex justify-between"><span className="text-sm text-slate-500">Beneficiary</span><span className="text-sm font-medium text-slate-700">{profile.firstName} {profile.lastName}</span></div>

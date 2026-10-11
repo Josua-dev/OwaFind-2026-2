@@ -1,15 +1,29 @@
+/**
+ * Application-wide context.
+ *
+ * State is divided into three categories:
+ *  - UI preferences (role, activeInstitutionId, sidebar/theme) — stored
+ *    client-side as they are not server-owned business data.
+ *  - User-entered search input (profile) — kept client-side because the
+ *    backend only uses it as search criteria; there is no user-account API.
+ *  - Server-owned records (beneficiary search results, claims, documents,
+ *    tickets) — retrieved from the Pension Funds API. These are NOT
+ *    persisted in localStorage and cannot be restored from it.
+ *
+ * If the app reloads, UI preferences are preserved but live records are
+ * re-fetched from the API on next navigation.
+ */
+
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type {
   Role,
   BeneficiaryProfile,
-  Notification,
   Claim,
   UploadedDocument,
   SupportTicket,
+  MatchRecord,
 } from '@/types';
-import { seedProfile, seedNotifications, seedClaims, seedSupportTickets } from '@/data/seed';
-import { DEFAULT_INSTITUTION_ID } from '@/data/institutions';
 
 interface AppContextValue {
   role: Role;
@@ -23,14 +37,12 @@ interface AppContextValue {
   profile: BeneficiaryProfile;
   setProfile: (profile: BeneficiaryProfile) => void;
 
-  notifications: Notification[];
-  setNotifications: (n: Notification[]) => void;
+  notifications: unknown[]; // no notification API endpoint
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   unreadCount: number;
 
   claims: Claim[];
-  setClaims: (c: Claim[]) => void;
   addClaim: (claim: Claim) => void;
   updateClaim: (claim: Claim) => void;
 
@@ -42,6 +54,9 @@ interface AppContextValue {
   tickets: SupportTicket[];
   addTicket: (t: SupportTicket) => void;
 
+  searchResults: MatchRecord[]; // results of the last beneficiary search (from API)
+  clearSearchResults: () => void;
+
   consentGiven: boolean;
   setConsentGiven: (v: boolean) => void;
 
@@ -51,35 +66,35 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'owafind-demo-state';
+// Keep only UI preferences in localStorage; business records are never
+// restored from the browser store.
+const UI_PERSIST_KEY = 'owafind-ui-prefs';
 
-// Single source of truth for each role's home route.
-export const ROLE_HOME: Record<Role, string> = {
-  beneficiary: '/app/dashboard',
-  institution: '/app/institution',
-  regulator: '/app/regulator',
-  executive: '/app/executive',
-  admin: '/app/admin',
+const DEFAULT_PROFILE: BeneficiaryProfile = {
+  firstName: '',
+  lastName: '',
+  dateOfBirth: '',
+  nationalId: '',
+  previousName: '',
+  phone: '',
+  email: '',
+  region: '',
+  employmentHistory: [],
+  consentGiven: false,
+  consentDate: null,
+  profileCompletion: 0,
+  verificationStatus: 'unverified',
 };
 
-export function roleHomePath(role: Role) {
-  return ROLE_HOME[role];
-}
-
-interface PersistedState {
+interface UIPrefs {
   role: Role;
   activeInstitutionId: string;
-  profile: BeneficiaryProfile;
-  notifications: Notification[];
-  claims: Claim[];
-  documents: UploadedDocument[];
-  tickets: SupportTicket[];
   consentGiven: boolean;
 }
 
-function loadState(): Partial<PersistedState> {
+function loadUIPrefs(): Partial<UIPrefs> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(UI_PERSIST_KEY);
     if (raw) return JSON.parse(raw);
   } catch {
     // ignore
@@ -87,100 +102,121 @@ function loadState(): Partial<PersistedState> {
   return {};
 }
 
-function saveState(state: PersistedState) {
+function saveUIPrefs(prefs: UIPrefs) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(UI_PERSIST_KEY, JSON.stringify(prefs));
   } catch {
     // ignore
   }
 }
 
+export function ROLE_HOME(role: Role): string {
+  switch (role) {
+    case 'beneficiary':
+      return '/app/dashboard';
+    case 'institution':
+      return '/app/institution';
+    case 'regulator':
+      return '/app/regulator';
+    case 'executive':
+      return '/app/executive';
+    case 'admin':
+      return '/app/admin';
+    default:
+      return '/app/dashboard';
+  }
+}
+
+export function roleHomePath(role: Role): string {
+  return ROLE_HOME(role);
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const persisted = loadState();
+  const persisted = loadUIPrefs();
   const navigate = useNavigate();
 
   const [role, setRole] = useState<Role>(persisted.role || 'beneficiary');
   const [activeInstitutionId, setActiveInstitutionId] = useState<string>(
-    persisted.activeInstitutionId || DEFAULT_INSTITUTION_ID
+    persisted.activeInstitutionId || 'gipf'
   );
-  const [profile, setProfile] = useState<BeneficiaryProfile>(persisted.profile || seedProfile);
-  const [notifications, setNotifications] = useState<Notification[]>(
-    persisted.notifications || seedNotifications
-  );
-  const [claims, setClaims] = useState<Claim[]>(persisted.claims || seedClaims);
-  const [documents, setDocuments] = useState<UploadedDocument[]>(persisted.documents || []);
-  const [tickets, setTickets] = useState<SupportTicket[]>(persisted.tickets || seedSupportTickets);
+  const [profile, setProfile] = useState<BeneficiaryProfile>(DEFAULT_PROFILE);
+  const [searchResults, setSearchResults] = useState<MatchRecord[]>([]);
+  const [notifications, setNotifications] = useState<unknown[]>([]);
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [consentGiven, setConsentGiven] = useState<boolean>(persisted.consentGiven ?? false);
   const [switching, setSwitching] = useState(false);
   const switchTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    saveState({ role, activeInstitutionId, profile, notifications, claims, documents, tickets, consentGiven });
-  }, [role, activeInstitutionId, profile, notifications, claims, documents, tickets, consentGiven]);
+    saveUIPrefs({ role, activeInstitutionId, consentGiven });
+  }, [role, activeInstitutionId, consentGiven]);
 
   useEffect(() => () => window.clearTimeout(switchTimer.current), []);
 
-  // Centralized role switch: updates state, persists (via the save effect),
-  // navigates to the new role's dashboard, and briefly shows the
-  // workspace-switch overlay. Pages remount because the layout is keyed by
-  // role, so no page-level state leaks across roles.
   const switchRole = (next: Role) => {
     if (next !== role) {
       setSwitching(true);
       setRole(next);
     }
-    navigate(roleHomePath(next), { replace: true });
+    navigate(ROLE_HOME(next), { replace: true });
     window.clearTimeout(switchTimer.current);
     switchTimer.current = window.setTimeout(() => setSwitching(false), 350);
   };
 
-  const markNotificationRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markNotificationRead = (_id: string): void => {
+    setNotifications((prev) => prev.map((n) => n));
   };
 
-  const markAllNotificationsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const markAllNotificationsRead = (): void => {
+    setNotifications([]);
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => n !== null).length;
 
-  const addClaim = (claim: Claim) => {
+  const addClaim = (claim: Claim): void => {
     setClaims((prev) => [claim, ...prev]);
   };
 
-  const updateClaim = (claim: Claim) => {
+  const updateClaim = (claim: Claim): void => {
     setClaims((prev) => prev.map((c) => (c.id === claim.id ? claim : c)));
   };
 
-  const addDocument = (doc: UploadedDocument) => {
+  const addDocument = (doc: UploadedDocument): void => {
     setDocuments((prev) => [doc, ...prev]);
   };
 
-  const updateDocument = (doc: UploadedDocument) => {
+  const updateDocument = (doc: UploadedDocument): void => {
     setDocuments((prev) => prev.map((d) => (d.id === doc.id ? doc : d)));
   };
 
-  const removeDocument = (id: string) => {
+  const removeDocument = (id: string): void => {
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   };
 
-  const addTicket = (t: SupportTicket) => {
+  const addTicket = (t: SupportTicket): void => {
     setTickets((prev) => [t, ...prev]);
   };
 
-  const resetDemo = () => {
-    localStorage.removeItem(STORAGE_KEY);
+  const clearSearchResults = (): void => {
+    setSearchResults([]);
+  };
+
+  const resetDemo = (): void => {
+    localStorage.removeItem(UI_PERSIST_KEY);
     setRole('beneficiary');
-    setActiveInstitutionId(DEFAULT_INSTITUTION_ID);
-    setProfile(seedProfile);
-    setNotifications(seedNotifications);
-    setClaims(seedClaims);
+    setActiveInstitutionId('gipf');
+    setProfile(DEFAULT_PROFILE);
+    setSearchResults([]);
+    setNotifications([]);
+    setClaims([]);
     setDocuments([]);
-    setTickets(seedSupportTickets);
+    setTickets([]);
     setConsentGiven(false);
   };
 
-  const logout = () => {
+  const logout = (): void => {
     resetDemo();
     navigate('/login', { replace: true });
   };
@@ -197,12 +233,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         profile,
         setProfile,
         notifications,
-        setNotifications,
         markNotificationRead,
         markAllNotificationsRead,
         unreadCount,
         claims,
-        setClaims,
         addClaim,
         updateClaim,
         documents,
@@ -211,6 +245,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         removeDocument,
         tickets,
         addTicket,
+        searchResults,
+        clearSearchResults,
         consentGiven,
         setConsentGiven,
         resetDemo,
@@ -222,7 +258,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useApp() {
+export function useApp(): AppContextValue {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error('useApp must be used within AppProvider');
   return ctx;

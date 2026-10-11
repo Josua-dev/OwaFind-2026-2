@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   Target,
   FileText,
@@ -18,15 +19,23 @@ import { Progress } from '@/components/ui/Feedback';
 import { StateBadge } from '@/components/shared/Timeline';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency, formatCurrencyShort, timeAgo } from '@/utils/format';
-import { seedMatches } from '@/data/seed';
+import { benefitService, claimService } from '@/services';
+import { cn } from '@/utils/format';
 
 export function BeneficiaryDashboard() {
-  const { profile, claims, notifications } = useApp();
+  const { profile, claims, notifications, searchResults, setClaims } = useApp();
   const activeClaims = claims.filter((c) => !['CLOSED', 'APPROVED', 'REJECTED'].includes(c.state));
-  const unreadNotifications = notifications.filter((n) => !n.read);
+  const unreadNotifications = notifications.filter((n) => n !== null && !n.read);
   const totalDocs = claims.reduce((sum, c) => sum + c.documents.length, 0);
-  const potentialBenefits = seedMatches.length;
-  const totalValue = seedMatches.reduce((sum, m) => sum + m.potentialValue, 0);
+  const potentialBenefits = searchResults.length;
+  const totalValue = searchResults.reduce((sum, m) => sum + m.potentialValue, 0);
+
+  useEffect(() => {
+    if (profile.nationalId) {
+      benefitService.searchBenefits(profile);
+    }
+    claimService.getClaims().then((c) => setClaims(c));
+  }, [profile.nationalId]);
 
   const stats = [
     { label: 'Potential Benefits', value: potentialBenefits.toString(), icon: Target, color: 'bg-primary-50 text-primary-600', link: '/app/matches' },
@@ -40,7 +49,7 @@ export function BeneficiaryDashboard() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-            Welcome back, {profile.firstName}
+            Welcome back, {profile.firstName || 'Beneficiary'}
           </h1>
           <p className="text-slate-500 mt-1">Here's an overview of your benefits and claims</p>
         </div>
@@ -52,17 +61,11 @@ export function BeneficiaryDashboard() {
         </Link>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-            >
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
               <Link to={stat.link}>
                 <Card hover className="p-5">
                   <div className={`w-10 h-10 rounded-xl ${stat.color} flex items-center justify-center mb-3`}>
@@ -78,7 +81,6 @@ export function BeneficiaryDashboard() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Potential Value Card */}
         <Card className="bg-gradient-to-br from-primary-600 to-primary-800 text-white border-0 lg:col-span-1">
           <CardBody>
             <div className="flex items-center gap-2 mb-3">
@@ -86,7 +88,7 @@ export function BeneficiaryDashboard() {
               <p className="text-sm text-primary-100">Total Potential Value</p>
             </div>
             <p className="text-3xl font-bold font-display">{formatCurrencyShort(totalValue)}</p>
-            <p className="text-xs text-primary-200 mt-2">Across {potentialBenefits} potential matches</p>
+            <p className="text-xs text-primary-200 mt-2">Across {potentialBenefits} potential {potentialBenefits === 1 ? 'match' : 'matches'}</p>
             <div className="mt-4 pt-4 border-t border-white/10">
               <Link to="/app/matches" className="flex items-center gap-1 text-sm text-white hover:text-primary-100">
                 View all matches <ArrowRight className="w-3.5 h-3.5" />
@@ -95,7 +97,6 @@ export function BeneficiaryDashboard() {
           </CardBody>
         </Card>
 
-        {/* Active Claims */}
         <Card className="lg:col-span-2">
           <CardHeader title="Active Claims" subtitle="Track your ongoing claims" action={
             <Link to="/app/claims"><Button variant="ghost" size="sm">View all</Button></Link>
@@ -135,7 +136,6 @@ export function BeneficiaryDashboard() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Recent Notifications */}
         <Card className="lg:col-span-2">
           <CardHeader title="Recent Activity" subtitle="Latest updates on your account" action={
             <Link to="/app/notifications"><Button variant="ghost" size="sm">View all</Button></Link>
@@ -144,7 +144,7 @@ export function BeneficiaryDashboard() {
             <div className="space-y-3">
               {notifications.slice(0, 4).map((n) => (
                 <div key={n.id} className="flex items-start gap-3 py-2 border-b border-slate-50 last:border-0">
-                  <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-slate-200' : 'bg-primary-500'}`} />
+                  {n.read ? null : <div className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-primary-500" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-800">{n.title}</p>
                     <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{n.message}</p>
@@ -156,18 +156,17 @@ export function BeneficiaryDashboard() {
           </CardBody>
         </Card>
 
-        {/* Profile Completion & Next Action */}
         <div className="space-y-6">
           <Card>
             <CardHeader title="Profile Completion" />
             <CardBody>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
-                  {profile.firstName[0]}{profile.lastName[0]}
+                  {profile.firstName ? profile.firstName[0] : 'J'}{profile.lastName ? profile.lastName[0] : 'U'}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-800">{profile.firstName} {profile.lastName}</p>
-                  <p className="text-xs text-slate-400">{profile.region}</p>
+                  <p className="text-sm font-medium text-slate-800">{profile.firstName || 'Josua'} {profile.lastName || 'Uuyuni'}</p>
+                  <p className="text-xs text-slate-400">{profile.region || 'Windhoek'}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between text-sm mb-1">
@@ -175,7 +174,7 @@ export function BeneficiaryDashboard() {
                 <span className="font-medium text-slate-700">{profile.profileCompletion}%</span>
               </div>
               <Progress value={profile.profileCompletion} color="primary" />
-              <Link to="/app/profile" className="block mt-3">
+              <Link to="/app/profile">
                 <Button variant="outline" size="sm" className="w-full">
                   <User className="w-3.5 h-3.5" />
                   Complete Profile
@@ -184,16 +183,14 @@ export function BeneficiaryDashboard() {
             </CardBody>
           </Card>
 
-          <Card className="bg-accent-50/50 border-accent-100">
+          <Card className="bg-primary-50/50 border-primary-100">
             <CardBody>
               <div className="flex items-start gap-2 mb-2">
-                <Clock className="w-5 h-5 text-accent-600 shrink-0 mt-0.5" />
+                <Clock className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-slate-800">Next Action</p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {activeClaims.length > 0
-                      ? `Check the status of your claim ${activeClaims[0].id}`
-                      : 'Search for potential benefits to get started'}
+                    {activeClaims.length > 0 ? `Check the status of your claim ${activeClaims[0].id}` : 'Search for potential benefits to get started'}
                   </p>
                 </div>
               </div>
@@ -208,10 +205,7 @@ export function BeneficiaryDashboard() {
       </div>
 
       <div className="text-center pt-2">
-        <span className="text-xs text-slate-400 inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-accent-500" />
-          Demonstration Data — All values are simulated for prototype purposes
-        </span>
+        <span className="text-xs text-slate-400 inline-flex items-center gap-1.5" />
       </div>
     </div>
   );

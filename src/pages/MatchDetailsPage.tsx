@@ -64,13 +64,6 @@ export function MatchDetailsPage() {
         legal entitlement. Final verification, approval, and payment remain with the institution holding the benefit.
       </Alert>
 
-      <Alert tone="info" title="Simulated match — demonstration data">
-        This is a simulated potential match for demonstration purposes. OwaFind does not have access to the
-        institution's private member records. All matching signals, values and references shown here are
-        demonstration data. Final verification, entitlement and payment remain the responsibility of the
-        relevant institution.
-      </Alert>
-
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card>
@@ -148,12 +141,12 @@ export function MatchDetailsPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-800">AI-Assisted Observation</p>
-                  <p className="text-xs text-slate-500 mt-0.5">OwaAssist Demo v1 • 92% confidence</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Based on identity verification signals</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                "This match shows strong identity alignment across multiple signals. The national ID and date of birth
-                match exactly, suggesting a high likelihood of legitimate entitlement."
+                "This match shows identity alignment across multiple verification signals. The match is based on
+                data from the Pension Funds API and requires final verification by the holding institution."
               </p>
               <Alert tone="info" className="mt-3 text-xs">
                 AI output is advisory and does not determine entitlement or approve claims.

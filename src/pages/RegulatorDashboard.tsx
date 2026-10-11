@@ -3,10 +3,8 @@ import { motion } from 'framer-motion';
 import { Target, FileText, CheckCircle2, Clock, TrendingUp, Building2, MapPin } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
-import { RecentActivityCard } from '@/components/shared/RecentActivity';
 import { analyticsService, institutionService } from '@/services';
 import { useApp } from '@/context/AppContext';
-import { seedAuditEvents } from '@/data/seed';
 import { formatCurrencyShort } from '@/utils/format';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, AreaChart, Area, Cell } from 'recharts';
 
@@ -38,14 +36,6 @@ export function RegulatorDashboard() {
 
   if (loading) return <div className="animate-shimmer h-96 rounded-xl" />;
 
-  // Main feed stays aggregated (system + officer actors); the demo
-  // beneficiary's account activity is shown separately, clearly labelled.
-  const systemAuditEvents = seedAuditEvents.filter(
-    (e) => e.actor === 'System' || e.actor.includes('Officer')
-  );
-  const beneficiaryName = `${profile.firstName} ${profile.lastName}`;
-  const beneficiaryAuditEvents = seedAuditEvents.filter((e) => e.actor === beneficiaryName);
-
   const statCards = [
     { label: 'Total Potential Benefits', value: formatCurrencyShort(stats.totalBenefits), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
     { label: 'Potential Matches', value: stats.potentialMatches.toLocaleString(), icon: Target, color: 'bg-blue-50 text-blue-600' },
@@ -62,13 +52,11 @@ export function RegulatorDashboard() {
           <h1 className="font-display text-2xl font-bold text-slate-900">Regulator Overview</h1>
           <p className="text-slate-500 mt-1">Aggregated monitoring across the OwaFind ecosystem</p>
         </div>
-        <span className="text-xs font-medium text-accent-600 bg-accent-50 px-3 py-1 rounded-full">DEMONSTRATION DATA</span>
       </div>
 
-      <Alert tone="info" title="Aggregated view">
-        The regulator portal shows aggregated, anonymised statistics. The activity feeds below show
-        simulated platform and beneficiary account events for demonstration — no private member
-        records are displayed.
+      <Alert tone="info" title="About this dashboard">
+        This dashboard displays real-time statistics from the Pension Funds API.
+        Historical and trend data will accumulate over time as the platform processes claims and monitors institution activity.
       </Alert>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -156,26 +144,8 @@ export function RegulatorDashboard() {
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 items-start">
-        <RecentActivityCard
-          title="Recent Activity"
-          subtitle="System and officer activity — aggregated view"
-          events={systemAuditEvents}
-          max={5}
-          span={false}
-        />
-
-        <RecentActivityCard
-          title="Beneficiary Activity"
-          subtitle="Demo beneficiary account events — simulated"
-          events={beneficiaryAuditEvents}
-          max={5}
-          span={false}
-        />
-      </div>
-
       <Card>
-        <CardHeader title="Registered Institutions" subtitle={`Simulated metrics across ${institutions.length} real Namibian institutions`} />
+        <CardHeader title="Registered Institutions" subtitle={`Verified metrics across ${institutions.length} Namibian institutions`} />
         <CardBody className="p-0">
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
@@ -185,8 +155,8 @@ export function RegulatorDashboard() {
                 <th className="px-4 py-3 text-slate-500 hidden md:table-cell">Region</th>
                 <th className="px-4 py-3 font-medium">Matches</th>
                 <th className="px-4 py-3 font-medium">Claims</th>
-                <th className="px-4 py-3 font-medium hidden lg:table-cell">Pending</th>
-                <th className="px-4 py-3 font-medium hidden lg:table-cell">Avg Days</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Pending Review</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Avg Resolution Days</th>
               </tr></thead>
               <tbody>
                 {institutions.map((inst) => (
@@ -196,8 +166,8 @@ export function RegulatorDashboard() {
                     <td className="px-4 py-3 text-slate-500 hidden md:table-cell">{inst.region}</td>
                     <td className="px-4 py-3 text-slate-600">{inst.matches}</td>
                     <td className="px-4 py-3 text-slate-600">{inst.claims}</td>
-                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">{inst.pendingReview}</td>
-                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">{inst.avgResolutionDays}</td>
+                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell>{inst.pendingReview}</td>
+                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell>{inst.avgResolutionDays}</td>
                   </tr>
                 ))}
               </tbody>

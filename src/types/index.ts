@@ -52,7 +52,8 @@ export interface Claim {
   beneficiaryId: string;
   beneficiaryName: string;
   benefitType: BenefitType;
-  institutionName: string;
+  institutionId: string;
+  referenceNumber: string;
   state: ClaimState;
   potentialValue: number;
   submittedAt: string;
