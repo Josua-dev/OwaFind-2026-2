@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, User, Building, Briefcase, Users, LogIn, CheckCircle2 } from 'lucide-react';
-import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -76,7 +75,6 @@ export function LoginPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-6">
-            <Logo size="md" />
             <h1 className="font-display text-2xl font-bold text-slate-900 mt-3">Select your role</h1>
             <p className="text-slate-500 mt-1">Choose how you will use the local workspace</p>
           </div>
@@ -138,8 +136,7 @@ export function LoginPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <Logo size="md" />
-          <h1 className="font-display text-2xl font-bold text-slate-900 mt-3">Welcome to OwaFind</h1>
+          <h1 className="font-display text-2xl font-bold text-slate-900 mt-3">Welcome to the Workspace</h1>
           <p className="text-slate-500 mt-1">Local synthetic workspace</p>
         </div>
 
