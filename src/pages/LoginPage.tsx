@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, User, Building, Briefcase, Users, LogIn, CheckCircle2 } from 'lucide-react';
-import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Input';
 import { useApp } from '@/context/AppContext';
 import type { Role } from '@/types';
 
@@ -18,31 +15,7 @@ const roles: { id: Role; label: string; icon: typeof User; description: string }
   { id: 'admin', label: 'Admin', icon: ShieldCheck, description: 'I am an administrator' },
 ];
 
-const demoCredentials: Record<Role, { [key: string]: string }> = {
-  beneficiary: {
-    nationalId: '75031402048',
-    dateOfBirth: '1975-03-14',
-  },
-  institution: {
-    institutionRef: 'GIPF-2026-PROD',
-    password: 'demo123',
-  },
-  regulator: {
-    email: 'regulator@namfisa.gov.na',
-    password: 'demo123',
-  },
-  executive: {
-    email: 'executive@owafind.com',
-    password: 'demo123',
-  },
-  admin: {
-    email: 'admin@owafind.com',
-    password: 'demo123',
-  },
-};
-
 export function LoginPage() {
-  const navigate = useNavigate();
   const { switchRole } = useApp();
   const [showRoleSelect, setShowRoleSelect] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
@@ -57,61 +30,44 @@ export function LoginPage() {
   const roleLabels: Record<Role, string> = {
     beneficiary: 'National ID',
     institution: 'Institution Reference',
-    regulator: 'Email',
-    executive: 'Email',
-    admin: 'Email',
+    regulator: 'Workspace Email',
+    executive: 'Workspace Email',
+    admin: 'Workspace Email',
   };
 
   const rolePlaceholders: Record<Role, string> = {
-    beneficiary: '75031402048',
-    institution: 'GIPF-2026-PROD',
-    regulator: 'regulator@namfisa.gov.na',
-    executive: 'executive@owafind.com',
-    admin: 'admin@owafind.com',
+    beneficiary: 'Enter your beneficiary ID',
+    institution: 'Enter institution reference',
+    regulator: 'name@example.org',
+    executive: 'name@example.org',
+    admin: 'name@example.org',
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = (event: React.FormEvent) => {
+    event.preventDefault();
     setError('');
 
-    // Demo validation - in production this would be a real API call
     if (!selectedRole) {
-      setError('Please select your role');
+      setError('Please select your workspace role');
       return;
     }
 
-    // Demo roles with preset credentials
-    const creds = demoCredentials[selectedRole];
-
-    // Check if the entered values match demo values
-    if (selectedRole === 'beneficiary') {
-      if (
-        formData.nationalId !== creds.nationalId ||
-        formData.dateOfBirth !== creds.dateOfBirth
-      ) {
-        setError('Invalid credentials');
-        return;
-      }
-    } else if (selectedRole === 'institution') {
-      if (
-        formData.institutionRef !== creds.institutionRef ||
-        formData.password !== creds.password
-      ) {
-        setError('Invalid credentials');
-        return;
-      }
-    } else {
-      if (
-        formData.password !== creds.password
-      ) {
-        setError('Invalid credentials');
-        return;
-      }
+    if (showRoleSelect) {
+      switchRole(selectedRole);
+      return;
     }
 
-    // Switch to the selected role and navigate to dashboard
+    const validForRole =
+      selectedRole === 'beneficiary'
+        ? formData.nationalId.trim().length > 0 && formData.dateOfBirth.trim().length > 0
+        : formData.password.trim().length > 0 || formData.nationalId.trim().length > 0 || formData.institutionRef.trim().length > 0;
+
+    if (!validForRole) {
+      setError('Please enter the required local workspace details for this role.');
+      return;
+    }
+
     switchRole(selectedRole);
-    navigate('/app/dashboard');
   };
 
   if (showRoleSelect) {
@@ -119,11 +75,8 @@ export function LoginPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-6">
-            <Logo size="md" />
-            <h1 className="font-display text-2xl font-bold text-slate-900 mt-3">
-              Select your role
-            </h1>
-            <p className="text-slate-500 mt-1">Choose how you'll use OwaFind</p>
+            <h1 className="font-display text-2xl font-bold text-slate-900 mt-3">Select your role</h1>
+            <p className="text-slate-500 mt-1">Choose how you will use the local workspace</p>
           </div>
 
           <form onSubmit={handleLogin}>
@@ -137,14 +90,10 @@ export function LoginPage() {
                     transition={{ delay: idx * 0.05 }}
                     onClick={() => {
                       setSelectedRole(role.id);
-                      // Populate formData with demo credentials for this role
-                      const creds = demoCredentials[role.id];
                       if (role.id === 'beneficiary') {
-                        setFormData({ nationalId: creds.nationalId, dateOfBirth: creds.dateOfBirth, institutionRef: '', password: '' });
-                      } else if (role.id === 'institution') {
-                        setFormData({ nationalId: '', dateOfBirth: '', institutionRef: creds.institutionRef, password: creds.password });
+                        setFormData({ nationalId: '', dateOfBirth: '', institutionRef: '', password: '' });
                       } else {
-                        setFormData({ nationalId: '', dateOfBirth: '', institutionRef: '', password: creds.password });
+                        setFormData({ nationalId: '', dateOfBirth: '', institutionRef: '', password: '' });
                       }
                     }}
                     className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-slate-50 mb-2 last:mb-0 ${selectedRole === role.id ? 'border border-primary-200' : ''}`}
@@ -172,19 +121,11 @@ export function LoginPage() {
               </div>
             </Card>
 
-            <Button type="submit" className="w-full mt-4" disabled={!selectedRole}>
-              Continue as {selectedRole && roles.find(r => r.id === selectedRole)?.label}
-            </Button>
+            <Button type="submit" className="w-full mt-4" disabled={!selectedRole}>Continue as {selectedRole && roles.find((r) => r.id === selectedRole)?.label}</Button>
           </form>
 
           <div className="text-center mt-4">
-            <button
-              type="button"
-              onClick={() => setShowRoleSelect(false)}
-              className="text-sm text-slate-400 hover:text-slate-600"
-            >
-              ← Back to role selection
-            </button>
+            <button type="button" onClick={() => setShowRoleSelect(false)} className="text-sm text-slate-400 hover:text-slate-600">← Back to role selection</button>
           </div>
         </div>
       </div>
@@ -195,13 +136,8 @@ export function LoginPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <Logo size="md" />
-          <h1 className="font-display text-2xl font-bold text-slate-900 mt-3">
-            Welcome to OwaFind
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Find what may belong to you
-          </p>
+          <h1 className="font-display text-2xl font-bold text-slate-900 mt-3">Welcome to the Workspace</h1>
+          <p className="text-slate-500 mt-1">Local synthetic workspace</p>
         </div>
 
         <Card>
@@ -214,105 +150,65 @@ export function LoginPage() {
               )}
 
               {!showRoleSelect && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowRoleSelect(true)}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Choose Role
-                  <ShieldCheck className="w-4 h-4 ml-2 hidden sm:block" />
+                <Button type="button" variant="outline" className="w-full" onClick={() => setShowRoleSelect(true)}>
+                  Select Workspace Role
                 </Button>
               )}
-
-              <form onSubmit={handleLogin}>
-                {selectedRole && (
-                  <>
-                    <Input
-                      type={selectedRole === 'beneficiary' ? 'text' : 'email'}
-                      label={roleLabels[selectedRole]}
-                      placeholder={rolePlaceholders[selectedRole]}
-                      value={selectedRole === 'beneficiary' ? formData.nationalId : formData.institutionRef}
-                      onChange={(e) => {
-                        if (selectedRole === 'beneficiary') {
-                          setFormData({ ...formData, nationalId: e.target.value });
-                        } else if (selectedRole === 'institution') {
-                          setFormData({ ...formData, institutionRef: e.target.value });
-                        } else {
-                          setFormData({ ...formData, password: e.target.value });
-                        }
-                      }}
-                      required
-                    />
-
-                    {selectedRole === 'beneficiary' ? (
-                      <Input
-                        type="date"
-                        label="Date of Birth"
-                        value={formData.dateOfBirth}
-                        onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                        required
-                      />
-                    ) : selectedRole === 'institution' ? (
-                      <Input
-                        type="password"
-                        label="Password"
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        required
-                      />
-                    ) : null}
-
-                    <Input
-                      type="password"
-                      label="Password"
-                      placeholder="••••••••"
-                      value={selectedRole === 'institution' ? formData.password : formData.password}
-                      onChange={(e) => {
-                        if (selectedRole === 'institution') {
-                          setFormData({ ...formData, password: e.target.value });
-                        } else {
-                          setFormData({ ...formData, password: e.target.value });
-                        }
-                      }}
-                      required
-                      className={selectedRole === 'beneficiary' ? 'sr-only' : ''}
-                    />
-
-                    <Button type="submit" className="w-full">
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Sign In as {roles.find(r => r.id === selectedRole)?.label}
-                    </Button>
-                  </>
-                )}
-              </form>
 
               {selectedRole && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setShowRoleSelect(false)}
-                >
-                  ← Choose Different Role
-                </Button>
+                <>
+                  <div className="space-y-2">
+                    {selectedRole === 'beneficiary' ? (
+                      <>
+                        <Input
+                          label="National ID"
+                          value={formData.nationalId}
+                          onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
+                          placeholder="Enter your national ID"
+                        />
+                        <Input
+                          label="Date of birth"
+                          type="date"
+                          value={formData.dateOfBirth}
+                          onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Input
+                          label={roleLabels[selectedRole]}
+                          value={selectedRole === 'institution' ? formData.institutionRef : formData.password}
+                          onChange={(e) =>
+                            selectedRole === 'institution'
+                              ? setFormData({ ...formData, institutionRef: e.target.value })
+                              : setFormData({ ...formData, password: e.target.value })
+                          }
+                          placeholder={rolePlaceholders[selectedRole]}
+                        />
+                        <Input
+                          label="Password"
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          placeholder="Enter any local workspace password"
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={!selectedRole}>
+                    <LogIn className="w-4 h-4" />
+                    Continue to workspace
+                  </Button>
+                </>
               )}
             </form>
-
-            <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-              <p className="text-xs text-slate-400">
-                Demo environment • Sign in below
-              </p>
-              <div className="mt-2 text-xs space-y-1">
-                <p><strong>Beneficiary:</strong> ID: 75031402048, DOB: 1975-03-14, Password: demo123</p>
-                <p><strong>Institution:</strong> Ref: GIPF-2026-PROD, Password: demo123</p>
-                <p><strong>Others:</strong> Email: (any), Password: demo123</p>
-              </div>
-            </div>
           </div>
         </Card>
+
+        <div className="mt-4 text-center text-xs text-slate-500">
+          No real authentication is used in this local synthetic workspace.
+        </div>
       </div>
     </div>
   );
