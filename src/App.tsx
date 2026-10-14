@@ -5,7 +5,7 @@ import { AppProvider, useApp, roleHomePath } from '@/context/AppContext';
 import { Spinner } from '@/components/ui/Feedback';
 import { BeneficiaryLayout } from '@/layouts/BeneficiaryLayout';
 import { InstitutionLayout } from '@/layouts/InstitutionLayout';
-import { RegulatorLayout } from '@/layouts/RegulatorLayout'; 
+import { RegulatorLayout } from '@/layouts/RegulatorLayout';
 import { ExecutiveLayout } from '@/layouts/ExecutiveLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import type { Role } from '@/types';
@@ -139,7 +139,7 @@ function AppRoutes() {
             <Route path="/app/matches" element={guarded(['beneficiary'], <MatchResultsPage />)} />
             <Route path="/app/matches/:id" element={guarded(['beneficiary'], <MatchDetailsPage />)} />
             <Route path="/app/claims" element={guarded(['beneficiary'], <ClaimsListPage />)} />
-            <Route path="/app/claims/:id" element={guarded(['beneficiary', 'institution'], <ClaimTrackingPage />)} />
+            <Route path="/app/claims/:id" element={guarded(['beneficiary'], <ClaimTrackingPage />)} />
             <Route path="/app/claims/new" element={guarded(['beneficiary'], <NewClaimPage />)} />
             <Route path="/app/notifications" element={<NotificationsPage />} />
             <Route path="/app/profile" element={guarded(['beneficiary'], <ProfilePage />)} />
