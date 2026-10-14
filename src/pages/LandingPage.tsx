@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import {
   ShieldCheck,
   Search,
+  FileCheck,
   ArrowRight,
   Building2,
   Users,
@@ -286,8 +287,9 @@ export function LandingPage() {
             ))}
           </div>
           <p className="text-xs text-slate-400 mt-6 max-w-md mx-auto">
-            This local workspace contains fictional synthetic records for Namibian benefit institutions.
-            It is designed for prototype exploration and does not connect to any live service.
+            OwaFind currently connects with the Namibia Pension Funds API to search for benefit
+            records. Additional institution integrations would be subject to regulatory approval
+            and data-sharing agreements.
           </p>
         </div>
       </section>
@@ -330,9 +332,9 @@ export function LandingPage() {
             <div>
               <h4 className="text-white font-semibold text-sm mb-3">Important</h4>
               <p className="text-slate-400 text-sm leading-relaxed">
-                This local synthetic workspace contains fictional institutional, beneficiary, claim, and
-                historical records for prototype use only. It does not represent a live connection to any
-                institution or a legal filing.
+                OwaFind is a platform that connects with the Namibia Pension Funds API to search for
+                benefit records. A potential match identified by the system does not establish legal
+                entitlement - final verification and payment remain with the institution holding the benefit.
               </p>
             </div>
           </div>
