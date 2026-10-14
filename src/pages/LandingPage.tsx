@@ -89,7 +89,7 @@ export function LandingPage() {
                 you through claiming what's yours.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                <Link to="/app/discovery">
+                <Link to="/login">
                   <Button size="lg" className="w-full sm:w-auto">
                     <Search className="w-4 h-4" />
                     Find My Benefits
@@ -301,7 +301,7 @@ export function LandingPage() {
           <p className="text-primary-200 mt-4 max-w-xl mx-auto">
             Start your free search today. No obligation, no cost. Your information stays private.
           </p>
-          <Link to="/app/discovery" className="inline-block mt-8">
+          <Link to="/login" className="inline-block mt-8">
             <Button size="lg" variant="secondary" className="bg-white text-primary-700 hover:bg-primary-50">
               <Search className="w-4 h-4" />
               Find My Benefits
