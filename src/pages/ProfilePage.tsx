@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Mail, Phone, Briefcase, ShieldCheck, CheckCircle2, Plus, X } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { User, Mail, Phone, MapPin, Briefcase, ShieldCheck, Lock, CheckCircle2, Plus, X } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
+import { Badge } from '@/components/ui/Badge';
 import { useApp } from '@/context/AppContext';
 import type { EmploymentEntry } from '@/types';
 
