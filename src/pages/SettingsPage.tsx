@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Shield, Lock, HelpCircle, Trash2, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { User, Bell, Shield, Lock, HelpCircle, Trash2, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
@@ -18,14 +18,14 @@ const tabs: { id: SettingsTab; label: string; icon: typeof User }[] = [
 ];
 
 export function SettingsPage() {
-  const { consentGiven, setConsentGiven, resetWorkspace, profile } = useApp();
+  const { consentGiven, setConsentGiven, resetDemo, profile } = useApp();
   const [tab, setTab] = useState<SettingsTab>('account');
   const [showReset, setShowReset] = useState(false);
   const [resetDone, setResetDone] = useState(false);
   const [notifPrefs, setNotifPrefs] = useState({ match: true, document: true, claim: true, system: false });
 
   const handleReset = () => {
-    resetWorkspace();
+    resetDemo();
     setShowReset(false);
     setResetDone(true);
     setTimeout(() => setResetDone(false), 4000);
@@ -38,7 +38,7 @@ export function SettingsPage() {
         <p className="text-slate-500 mt-1">Manage your account, privacy, and security</p>
       </div>
 
-      {resetDone && <Alert tone="success" title="Local workspace reset">The synthetic workspace has been reset to its initial state.</Alert>}
+      {resetDone && <Alert tone="success" title="Demo reset">The prototype has been reset to its initial state.</Alert>}
 
       {/* Tab Navigation */}
       <div className="flex gap-1 overflow-x-auto scrollbar-thin border-b border-slate-200">
@@ -125,7 +125,7 @@ export function SettingsPage() {
           <Card>
             <CardHeader title="Data Permissions" />
             <CardBody className="space-y-3">
-              {['Allow identity matching', 'Allow employment history search', 'Allow institution contact'].map((perm) => (
+              {['Allow identity matching', 'Allow employment history search', 'Allow institution contact'].map((perm, i) => (
                 <div key={perm} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
                   <span className="text-sm text-slate-700">{perm}</span>
                   <CheckCircle2 className="w-4 h-4 text-success-500" />
@@ -139,7 +139,7 @@ export function SettingsPage() {
       {tab === 'security' && (
         <div className="space-y-6">
           <Card>
-            <CardHeader title="Password" subtitle="Local workspace only — no real password is stored" />
+            <CardHeader title="Password" subtitle="Demo only — no real password is stored" />
             <CardBody>
               <Button variant="outline" size="sm">Change Password</Button>
             </CardBody>
@@ -157,7 +157,7 @@ export function SettingsPage() {
             <CardHeader title="Active Sessions" />
             <CardBody className="space-y-2">
               <div className="flex items-center justify-between py-2 border-b border-slate-50">
-                <div><p className="text-sm text-slate-700">Current session</p><p className="text-xs text-slate-400">Synthetic browser session — Windhoek</p></div>
+                <div><p className="text-sm text-slate-700">Current session</p><p className="text-xs text-slate-400">Demo Browser — Windhoek</p></div>
                 <span className="text-xs text-success-600 bg-success-50 px-2 py-0.5 rounded">Active</span>
               </div>
             </CardBody>
@@ -184,20 +184,20 @@ export function SettingsPage() {
 
       {/* Danger Zone */}
       <Card className="border-error-200">
-        <CardHeader title="Local workspace administration" subtitle="Reset the prototype state" />
+        <CardHeader title="Demo Administration" subtitle="Reset the prototype state" />
         <CardBody>
-          <Alert tone="error" title="Reset workspace data">
-            This will clear all local workspace data (profile, claims, notifications, documents) and restore the synthetic baseline state.
+          <Alert tone="error" title="Reset Demo">
+            This will clear all local data (profile, claims, notifications, documents) and restore the prototype to its initial state.
           </Alert>
           <Button variant="danger" size="sm" className="mt-4" onClick={() => setShowReset(true)}>
             <RotateCcw className="w-4 h-4" />
-            Reset workspace data
+            Reset Demo
           </Button>
         </CardBody>
       </Card>
 
-      <Modal open={showReset} onClose={() => setShowReset(false)} title="Reset workspace data?" size="sm">
-        <p className="text-sm text-slate-600">Are you sure you want to reset the local synthetic workspace? This will erase all local data and restore the synthetic baseline state. This action cannot be undone.</p>
+      <Modal open={showReset} onClose={() => setShowReset(false)} title="Reset Demo?" size="sm">
+        <p className="text-sm text-slate-600">Are you sure you want to reset the demo? This will erase all your local data and restore the initial demo state. This action cannot be undone.</p>
         <div className="flex gap-3 mt-6">
           <Button variant="outline" className="flex-1" onClick={() => setShowReset(false)}>Cancel</Button>
           <Button variant="danger" className="flex-1" onClick={handleReset}><Trash2 className="w-4 h-4" /> Reset</Button>
@@ -206,4 +206,3 @@ export function SettingsPage() {
     </div>
   );
 }
-
