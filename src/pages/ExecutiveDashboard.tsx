@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Target, CheckCircle2, FileText, Building2, Clock } from 'lucide-react';
+import { TrendingUp, Target, CheckCircle2, FileText, Building2, Clock, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
+import { RecentActivityCard } from '@/components/shared/RecentActivity';
 import { analyticsService } from '@/services';
 import { formatCurrencyShort } from '@/utils/format';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend, LineChart, Line } from 'recharts';
 
 export function ExecutiveDashboard() {
-  const [stats, setStats] = useState({ totalBenefits: 0, potentialMatches: 0, verifiedMatches: 0, openClaims: 0, resolvedClaims: 0, openClaimValue: 0, avgResolutionTime: 0, institutionsWithRecords: 0 });
-  const [trendData, setTrendData] = useState<Array<{ label: string; matches?: number; verified?: number; claims?: number }>>([]);
-  const [categoryData, setCategoryData] = useState<Array<{ label: string; value: number; claims?: number }>>([]);
-  const [volumeData, setVolumeData] = useState<Array<{ label: string; value: number }>>([]);
-  const [resolutionData, setResolutionData] = useState<Array<{ label: string; resolved?: number; avgDays?: number }>>([]);
+  const [stats, setStats] = useState({ totalBenefits: 0, potentialMatches: 0, verifiedMatches: 0, openClaims: 0, resolvedClaims: 0, potentialRecoveryValue: 0, avgResolutionTime: 0, activeInstitutions: 0 });
+  const [trendData, setTrendData] = useState<{ label: string; matches: number; verified: number; claims: number }[]>([]);
+  const [categoryData, setCategoryData] = useState<{ label: string; value: number; claims: number }[]>([]);
+  const [volumeData, setVolumeData] = useState<{ label: string; value: number }[]>([]);
+  const [resolutionData, setResolutionData] = useState<{ label: string; resolved: number; avgDays: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,14 +32,14 @@ export function ExecutiveDashboard() {
   if (loading) return <div className="animate-shimmer h-96 rounded-xl" />;
 
   const kpis = [
-    { label: 'Total Unclaimed Benefits', value: formatCurrencyShort(stats.totalBenefits), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
+    { label: 'Total Benefits', value: formatCurrencyShort(stats.totalBenefits), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
     { label: 'Potential Matches', value: stats.potentialMatches.toLocaleString(), icon: Target, color: 'bg-blue-50 text-blue-600' },
     { label: 'Verified Matches', value: stats.verifiedMatches.toLocaleString(), icon: CheckCircle2, color: 'bg-success-50 text-success-600' },
     { label: 'Open Claims', value: stats.openClaims.toLocaleString(), icon: FileText, color: 'bg-accent-50 text-accent-600' },
     { label: 'Resolved Claims', value: stats.resolvedClaims.toLocaleString(), icon: CheckCircle2, color: 'bg-success-50 text-success-600' },
-    { label: 'Open Claim Value', value: formatCurrencyShort(stats.openClaimValue), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
-    { label: 'Avg Resolution', value: stats.resolvedClaims > 0 ? `${stats.avgResolutionTime} days` : '—', icon: Clock, color: 'bg-warning-50 text-warning-600' },
-    { label: 'Institutions with Records', value: stats.institutionsWithRecords.toString(), icon: Building2, color: 'bg-slate-100 text-slate-600' },
+    { label: 'Recovery Value', value: formatCurrencyShort(stats.potentialRecoveryValue), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
+    { label: 'Avg Resolution', value: `${stats.avgResolutionTime} days`, icon: Clock, color: 'bg-warning-50 text-warning-600' },
+    { label: 'Active Institutions', value: stats.activeInstitutions.toString(), icon: Building2, color: 'bg-slate-100 text-slate-600' },
   ];
 
   return (
@@ -70,7 +71,7 @@ export function ExecutiveDashboard() {
       <div className="grid lg:grid-cols-2 gap-6">
         {trendData.length > 0 ? (
           <Card>
-            <CardHeader title="Platform Growth" subtitle="Annual synthetic matches and claim submissions" />
+            <CardHeader title="Platform Growth" subtitle="Quarterly trends across key metrics" />
             <CardBody>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={trendData}>
@@ -97,7 +98,7 @@ export function ExecutiveDashboard() {
           </Card>
         ) : (
           <Card>
-            <CardHeader title="Platform Growth" subtitle="Annual synthetic matches and claim submissions" />
+            <CardHeader title="Platform Growth" subtitle="Quarterly trends across key metrics" />
             <CardBody className="text-center py-8">
               <p className="text-slate-500">Trend data will be available as the platform accumulates historical data.</p>
             </CardBody>
@@ -159,22 +160,23 @@ export function ExecutiveDashboard() {
 
         {categoryData.length > 0 ? (
           <Card>
-            <CardHeader title="Unclaimed Balance by Benefit Type" subtitle="Unclaimed account balance across all institutions" />
+            <CardHeader title="Benefit Category Distribution" subtitle="Matches by benefit type" />
             <CardBody>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={categoryData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(value: number) => formatCurrencyShort(value)} />
+                  <XAxis type="number" tick={{ fontSize: 12 }} />
                   <YAxis dataKey="label" type="category" tick={{ fontSize: 11 }} width={100} />
-                  <Tooltip formatter={(value) => formatCurrencyShort(Number(value ?? 0))} />
-                  <Bar dataKey="value" fill="#54988e" radius={[0, 4, 4, 0]} name="Unclaimed balance" />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#54988e" radius={[0, 4, 4, 0]} name="Matches" />
+                  <Bar dataKey="claims" fill="#fd7e14" radius={[0, 4, 4, 0]} name="Claims" />
                 </BarChart>
               </ResponsiveContainer>
             </CardBody>
           </Card>
         ) : (
           <Card>
-            <CardHeader title="Unclaimed Balance by Benefit Type" subtitle="Unclaimed account balance across all institutions" />
+            <CardHeader title="Benefit Category Distribution" subtitle="Matches by benefit type" />
             <CardBody className="text-center py-8">
               <p className="text-slate-500">Benefit category distribution data will be available as matches are identified.</p>
             </CardBody>
@@ -183,8 +185,8 @@ export function ExecutiveDashboard() {
       </div>
 
       <Alert tone="info" title="About this dashboard">
-        This dashboard summarises synthetic workspace statistics for fictional institutional activity,
-        claims, and historical trends generated for local exploration only.
+        This dashboard displays real-time statistics from the Pension Funds API.
+        Trend and historical data will accumulate over time as the platform processes claims and identifies matches.
       </Alert>
     </div>
   );
