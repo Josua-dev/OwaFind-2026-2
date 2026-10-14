@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
+import { Alert } from '@/components/ui/Alert';
 import { useApp } from '@/context/AppContext';
 import { matchService } from '@/services';
 import { cn } from '@/utils/format';
@@ -66,7 +67,7 @@ export function InstitutionMatchQueue() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-2xl font-bold text-slate-900">Match Queue</h1>
@@ -125,7 +126,7 @@ export function InstitutionMatchQueue() {
                   ))}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan="8" className="px-4 py-3 text-center text-slate-400">
+                      <td colSpan={8} className="px-4 py-3 text-center text-slate-400">
                         No matches found for this institution.
                       </td>
                     </tr>

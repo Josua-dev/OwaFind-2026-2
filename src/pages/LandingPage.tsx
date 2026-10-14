@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import {
   ShieldCheck,
   Search,
-  FileCheck,
   ArrowRight,
   Building2,
   Users,
@@ -104,6 +103,9 @@ export function LandingPage() {
               </div>
               <p className="text-sm text-slate-400 mt-4">
                 Free to search • No obligation • Your data stays private
+              </p>
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-4 max-w-lg">
+                Local synthetic workspace — all beneficiary, institution-account, claims, and historical activity records are fictional and stored in this browser.
               </p>
             </motion.div>
 
@@ -287,9 +289,7 @@ export function LandingPage() {
             ))}
           </div>
           <p className="text-xs text-slate-400 mt-6 max-w-md mx-auto">
-            OwaFind currently connects with the Namibia Pension Funds API to search for benefit
-            records. Additional institution integrations would be subject to regulatory approval
-            and data-sharing agreements.
+            Institution names are catalogue labels only. The fictional records shown in this local workspace are not connected to or endorsed by any institution.
           </p>
         </div>
       </section>
@@ -332,9 +332,8 @@ export function LandingPage() {
             <div>
               <h4 className="text-white font-semibold text-sm mb-3">Important</h4>
               <p className="text-slate-400 text-sm leading-relaxed">
-                OwaFind is a platform that connects with the Namibia Pension Funds API to search for
-                benefit records. A potential match identified by the system does not establish legal
-                entitlement - final verification and payment remain with the institution holding the benefit.
+                This local prototype uses fictional synthetic records and does not connect to institutions.
+                A potential match does not establish legal entitlement.
               </p>
             </div>
           </div>

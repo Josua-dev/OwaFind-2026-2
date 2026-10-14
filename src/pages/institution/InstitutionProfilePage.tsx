@@ -28,7 +28,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-// Institution Profile — displays real institutional information from the Pension Funds API
+// Institution catalogue profile with synthetic local statistics.
 export function InstitutionProfilePage() {
   const { activeInstitutionId } = useApp();
   const [institution, setInstitution] = useState<Institution | null>(null);
@@ -94,7 +94,7 @@ export function InstitutionProfilePage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm shrink-0">
-            {institution.short.slice(0, 2).toUpperCase()}
+            {(institution.short ?? institution.name).slice(0, 2).toUpperCase()}
           </div>
           <div>
             <h1 className="font-display text-2xl font-semibold text-slate-900">{institution.name}</h1>
@@ -110,7 +110,7 @@ export function InstitutionProfilePage() {
       <Card>
         <CardHeader
           title="Public Institutional Information"
-          subtitle="Verified information from the Pension Funds API"
+          subtitle="Catalogue information and synthetic local statistics"
           action={<Globe className="w-5 h-5 text-slate-300" />}
         />
         <CardBody className="pt-1">
@@ -119,7 +119,7 @@ export function InstitutionProfilePage() {
           <Field label="Country" value="Namibia" icon={<Globe className="w-4 h-4" />} />
           <Field label="Head office" value={institution.region} icon={<MapPin className="w-4 h-4" />} />
           <Field label="Status" value="Registered" icon={<ShieldCheck className="w-4 h-4" />} />
-          <Field label="API Identifier" value={institution.id} />
+          <Field label="Local catalogue ID" value={institution.id} />
         </CardBody>
       </Card>
 
@@ -127,7 +127,7 @@ export function InstitutionProfilePage() {
       <Card>
         <CardHeader
           title="Institution Statistics"
-          subtitle="Real-time statistics from the Pension Funds API"
+          subtitle="Synthetic figures derived from local records"
           action={<BarChart3 className="w-5 h-5 text-slate-300" />}
         />
         <CardBody>

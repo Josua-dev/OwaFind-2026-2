@@ -8,8 +8,8 @@ import { Alert } from '@/components/ui/Alert';
 import { DocumentUploader } from '@/components/shared/DocumentUploader';
 import { matchService, claimService } from '@/services';
 import { useApp } from '@/context/AppContext';
+import { syntheticWorkspace } from '@/data/synthetic';
 import { cn, formatCurrency } from '@/utils/format';
-import { SUPPORTED_FIRMS } from '@/services/pensionApi';
 import type { MatchRecord, Claim } from '@/types';
 
 const claimSteps = [
@@ -56,7 +56,7 @@ export function NewClaimPage() {
     if (!draftClaim) return;
 
     // Validate firm identifier before submission
-    if (!SUPPORTED_FIRMS.includes(draftClaim.institutionId)) {
+    if (!syntheticWorkspace.institutions.some((institution) => institution.id === draftClaim.institutionId)) {
       setSubmitError(`Invalid institution: ${draftClaim.institutionId}`);
       return;
     }
@@ -178,7 +178,7 @@ export function NewClaimPage() {
                 {!identityVerified ? (
                   <>
                     <Alert tone="info" title="Identity verification">
-                      We'll verify your identity using your national ID and personal information against the Pension Funds API records.
+                      This step is a local workflow simulation. No identity check is performed against an institution or external service.
                     </Alert>
                     <div className="bg-slate-50 rounded-xl p-5 space-y-3">
                       <div className="flex items-center gap-3">
@@ -238,7 +238,7 @@ export function NewClaimPage() {
               <CardHeader title="Review & Submit" subtitle="Please review your claim before submitting." />
               <CardBody className="space-y-4">
                 {submitError && (
-                  <Alert tone="destructive" title="Submit Error">
+                  <Alert tone="error" title="Submit Error">
                     {submitError}
                   </Alert>
                 )}

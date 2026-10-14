@@ -75,9 +75,9 @@ export function RegulatorLayout({ children }: { children: ReactNode }) {
   const navItems = navConfig[role];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen w-full min-w-0 bg-slate-50 flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 bg-white border-r border-slate-200 z-30">
+      <aside className="hidden xl:flex w-64 flex-col fixed inset-y-0 left-0 bg-white border-r border-slate-200 z-30">
         <div className="h-16 flex items-center px-5 border-b border-slate-100">
           <Logo size="sm" />
         </div>
@@ -124,7 +124,7 @@ export function RegulatorLayout({ children }: { children: ReactNode }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 xl:hidden"
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
@@ -132,7 +132,7 @@ export function RegulatorLayout({ children }: { children: ReactNode }) {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'tween', duration: 0.25 }}
-              className="fixed inset-y-0 left-0 w-72 bg-white z-50 lg:hidden flex flex-col"
+              className="fixed inset-y-0 left-0 w-72 max-w-[88vw] bg-white z-50 xl:hidden flex flex-col"
             >
               <div className="h-16 flex items-center justify-between px-5 border-b border-slate-100">
                 <Logo size="sm" />
@@ -166,13 +166,13 @@ export function RegulatorLayout({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="min-w-0 flex-1 xl:ml-64 flex flex-col min-h-screen">
         {/* Topbar */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-20">
-          <div className="flex items-center gap-3">
+        <header className="min-h-16 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-y-1 px-3 sm:h-16 sm:flex-nowrap sm:px-4 lg:px-6 sticky top-0 z-20">
+          <div className="flex w-full items-center gap-3 sm:w-auto">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center"
+              className="xl:hidden w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center"
             >
               <Menu className="w-5 h-5 text-slate-600" />
             </button>
@@ -191,24 +191,25 @@ export function RegulatorLayout({ children }: { children: ReactNode }) {
               <SearchIcon className="w-5 h-5 text-slate-600" />
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 sm:w-auto sm:flex-nowrap">
             <div className="hidden sm:block">
-              <span className="text-xs text-slate-400">Demo Environment</span>
+              <span className="text-xs text-slate-400">Local workspace</span>
             </div>
             <NotificationBell />
             <RoleSwitcher />
-            <button onClick={logout} className="text-sm text-slate-600 hover:text-slate-900">
-              Sign Out
+            <button onClick={logout} aria-label="Sign out" className="text-sm text-slate-600 hover:text-slate-900">
+              <span className="hidden sm:inline">Sign Out</span>
               <LogOut className="w-4 h-4 ml-1" />
             </button>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="min-w-0 w-full flex-1 p-4 lg:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
+              className="min-w-0"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}

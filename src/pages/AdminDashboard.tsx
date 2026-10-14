@@ -83,7 +83,7 @@ export function AdminDashboard() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-slate-900">Admin Dashboard</h1>
@@ -92,8 +92,7 @@ export function AdminDashboard() {
       </div>
 
       <Alert tone="info" title="About this dashboard">
-        This dashboard displays real-time statistics from the Pension Funds API and platform services.
-        Historical data will accumulate over time as the platform processes claims, monitors risk, and manages support tickets.
+        This local workspace displays fictional synthetic records and simulated historical activity. No institution is connected, and no claims or actions are transmitted.
       </Alert>
 
       {/* Platform-wide stats */}

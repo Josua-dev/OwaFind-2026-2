@@ -23,7 +23,7 @@ import { benefitService, claimService } from '@/services';
 import { cn } from '@/utils/format';
 
 export function BeneficiaryDashboard() {
-  const { profile, claims, notifications, searchResults, setClaims } = useApp();
+  const { profile, claims, notifications, searchResults, setClaims, setSearchResults } = useApp();
   const activeClaims = claims.filter((c) => !['CLOSED', 'APPROVED', 'REJECTED'].includes(c.state));
   const unreadNotifications = notifications.filter((n) => n !== null && !n.read);
   const totalDocs = claims.reduce((sum, c) => sum + c.documents.length, 0);
@@ -32,10 +32,10 @@ export function BeneficiaryDashboard() {
 
   useEffect(() => {
     if (profile.nationalId) {
-      benefitService.searchBenefits(profile);
+      benefitService.searchBenefits(profile).then(setSearchResults);
     }
     claimService.getClaims().then((c) => setClaims(c));
-  }, [profile.nationalId]);
+  }, [profile, setClaims, setSearchResults]);
 
   const stats = [
     { label: 'Potential Benefits', value: potentialBenefits.toString(), icon: Target, color: 'bg-primary-50 text-primary-600', link: '/app/matches' },
@@ -45,7 +45,7 @@ export function BeneficiaryDashboard() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
@@ -112,17 +112,17 @@ export function BeneficiaryDashboard() {
               <div className="space-y-3">
                 {activeClaims.slice(0, 3).map((claim) => (
                   <Link key={claim.id} to={`/app/claims/${claim.id}`}>
-                    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+                      <div className="flex min-w-0 items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center">
                           <FileText className="w-4 h-4 text-primary-600" />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-800">{claim.id}</p>
-                          <p className="text-xs text-slate-400">{claim.benefitType}</p>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-800">{claim.id}</p>
+                          <p className="truncate text-xs text-slate-400">{claim.benefitType}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <StateBadge state={claim.state} />
                         <span className="text-sm font-medium text-slate-700">{formatCurrency(claim.potentialValue)}</span>
                       </div>

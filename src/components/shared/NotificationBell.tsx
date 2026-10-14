@@ -1,10 +1,10 @@
 import { useApp } from '@/context/AppContext';
 import { Bell, CheckCheck, Search as SearchIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { cn, timeAgo } from '@/utils/format';
 import type { Notification } from '@/types';
+import { FloatingPopover } from '@/components/shared/FloatingPopover';
 
 const typeIcons: Record<Notification['type'], string> = {
   match: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
@@ -17,19 +17,14 @@ export function NotificationBell() {
   const { notifications, unreadCount, markNotificationRead, markAllNotificationsRead } = useApp();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  const close = useCallback(() => setOpen(false), []);
 
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((value) => !value)}
+        aria-label="Notifications"
+        aria-expanded={open}
         className="relative w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors"
       >
         <Bell className="w-5 h-5 text-slate-600" />
@@ -40,15 +35,15 @@ export function NotificationBell() {
         )}
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.96 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden"
-          >
+      <FloatingPopover
+        open={open}
+        anchorRef={ref}
+        onClose={close}
+        width={384}
+        maxHeight={480}
+        label="Notifications"
+        className="flex flex-col rounded-xl bg-white shadow-lg border border-slate-200 overflow-hidden"
+      >
             <div className="flex items-center justify-between p-4 border-b border-slate-100">
               <h3 className="font-display font-semibold text-slate-900">Notifications</h3>
               {unreadCount > 0 && (
@@ -61,7 +56,7 @@ export function NotificationBell() {
                 </button>
               )}
             </div>
-            <div className="max-h-96 overflow-y-auto scrollbar-thin">
+            <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
               {notifications.length === 0 ? (
                 <div className="p-8 text-center text-sm text-slate-400">No notifications</div>
               ) : (
@@ -98,9 +93,7 @@ export function NotificationBell() {
                 ))
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </FloatingPopover>
     </div>
   );
 }

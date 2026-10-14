@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ScrollText } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
+import { Alert } from '@/components/ui/Alert';
 import { Input } from '@/components/ui/Input';
 import { Search } from 'lucide-react';
 import { auditService } from '@/services';
@@ -57,8 +58,7 @@ export function AuditLogPage() {
       </div>
 
       <Alert tone="info" title="Audit Log Data Source">
-        This page displays audit events from the Pension Funds API.
-        Currently, audit event data is not available through the API endpoint.
+        This is synthetic historical activity for the local workspace, not a real institutional audit trail.
       </Alert>
 
       <Input placeholder="Search audit events..." value={query} onChange={(e) => setQuery(e.target.value)} icon={<Search className="w-4 h-4" />} />
@@ -85,9 +85,9 @@ export function AuditLogPage() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-slate-500">No audit events available from the Pension Funds API.</p>
+              <p className="text-slate-500">No synthetic historical activity is available.</p>
               <p className="text-xs text-slate-400 mt-2">
-                Audit logging will be available when the API endpoint is implemented.
+                Local workspace actions are recorded here when available.
               </p>
             </div>
           )}

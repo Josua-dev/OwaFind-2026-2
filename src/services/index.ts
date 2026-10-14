@@ -1,587 +1,507 @@
-/**
- * Service layer for the OwaFind application.
- *
- * All data operations now delegate to the external Pension Funds API.
- * Mock implementations, artificial delays, and synthetic fallback data
- * have been removed. If an API endpoint does not exist for a feature,
- * the service returns empty results or throws an error — it does not
- * fabricate data.
- *
- * See src/services/pensionApi.ts for endpoint definitions and
- * src/services/dataMapping.ts for API → UI type adapters.
- */
-
-import { delay } from '@/utils/format';
 import {
-  getHealth,
-  getServiceInfo,
-  listFirms,
-  getFirmMembers,
-  searchById,
-  searchByName,
-  searchClaimable,
-  listDormant,
-  listMultiFirm,
-  listClaims,
-  createClaim,
-  type SearchByIdResults,
-  type ClaimRecord,
-  type PensionFirm,
-  type FirmMember,
-  type ClaimableResponse,
-  type DormantResults,
-  type MultiFirmResponse,
-} from './pensionApi';
+  AS_OF_DATE,
+  syntheticWorkspace,
+} from '@/data/synthetic';
 import {
-  mapFirmToInstitution,
-  mapClaimableResponse,
-  mapSearchByIdResults,
-  mapDormantResults,
-  mapMultiFirmResults,
-  mapClaimRecord,
-} from './dataMapping';
+  getWorkspaceSnapshot,
+  loadLocalWorkspaceState,
+  saveLocalWorkspaceState,
+} from './workspaceRepository';
 import type {
-  MatchRecord,
-  Claim,
-  Notification,
-  BeneficiaryProfile,
-  Institution,
-  RiskAlert,
   AuditEvent,
+  BeneficiaryProfile,
+  Claim,
+  ClaimState,
   FAQ,
+  Institution,
+  MatchRecord,
+  Notification,
+  RiskAlert,
   SupportTicket,
   UploadedDocument,
-  ClaimState,
 } from '@/types';
 
-// ---------------------------------------------------------------------------
-// In-memory cache for the current beneficiary search results.
-// This allows MatchDetailsPage and NewClaimPage to look up a match by
-// its internal ID. The cache is cleared when a new search is performed.
-// ---------------------------------------------------------------------------
+const terminalStates: ClaimState[] = ['APPROVED', 'REJECTED', 'CLOSED'];
+const pendingStates: ClaimState[] = [
+  'SUBMITTED',
+  'IDENTITY_REVIEW',
+  'EVIDENCE_REVIEW',
+  'INSTITUTION_REVIEW',
+  'MORE_INFORMATION_REQUIRED',
+  'RESUBMITTED',
+  'APPEAL',
+];
+const stateTransitions: Record<ClaimState, ClaimState[]> = {
+  DRAFT: ['SUBMITTED'],
+  SUBMITTED: ['IDENTITY_REVIEW'],
+  IDENTITY_REVIEW: ['EVIDENCE_REVIEW', 'MORE_INFORMATION_REQUIRED', 'REJECTED'],
+  EVIDENCE_REVIEW: ['INSTITUTION_REVIEW', 'MORE_INFORMATION_REQUIRED', 'REJECTED'],
+  INSTITUTION_REVIEW: ['APPROVED', 'REJECTED', 'MORE_INFORMATION_REQUIRED'],
+  MORE_INFORMATION_REQUIRED: ['RESUBMITTED', 'REJECTED'],
+  RESUBMITTED: ['EVIDENCE_REVIEW'],
+  APPROVED: ['CLOSED'],
+  REJECTED: ['APPEAL', 'CLOSED'],
+  APPEAL: ['INSTITUTION_REVIEW', 'CLOSED'],
+  CLOSED: [],
+};
 
-let cachedSearchResult: {
-  matches: MatchRecord[];
-  totalBalance: number;
-  dormantBalance: number;
-  activeBalance: number;
-  cachedAt: number;
-} | null = null;
-
-function getCachedMatches(): MatchRecord[] {
-  return cachedSearchResult?.matches ?? [];
+function getMatchesForProfile(profile: BeneficiaryProfile): MatchRecord[] {
+  const id = profile.nationalId.trim().toLowerCase();
+  if (!id) return [];
+  return syntheticWorkspace.matches.filter((match) => match.beneficiaryId.toLowerCase() === id);
 }
 
-function clearCache(): void {
-  cachedSearchResult = null;
+function mean(values: number[]): number {
+  return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : 0;
 }
 
-function isCacheFresh(): boolean {
-  if (!cachedSearchResult) return false;
-  return Date.now() - cachedSearchResult.cachedAt < 5 * 60 * 1000; // 5 minutes
+function claimResolutionDays(claim: Claim): number {
+  return Math.max(0, Math.round(
+    (new Date(claim.updatedAt).getTime() - new Date(claim.submittedAt).getTime()) / 86_400_000,
+  ));
 }
 
-// ---------------------------------------------------------------------------
-// Benefit / Search services
-// ---------------------------------------------------------------------------
+function currentStats() {
+  const workspace = getWorkspaceSnapshot();
+  const claims = workspace.claims;
+  const unclaimed = workspace.benefitRecords.filter((record) => record.status === 'unclaimed');
+  const resolved = claims.filter((claim) => terminalStates.includes(claim.state));
+  const open = claims.filter((claim) => !terminalStates.includes(claim.state));
+  const verifiedMatches = workspace.matches.filter((match) => match.status === 'green').length;
+  return {
+    workspace,
+    claims,
+    unclaimed,
+    resolved,
+    open,
+    verifiedMatches,
+    avgResolutionDays: mean(resolved.map(claimResolutionDays)),
+    totalUnclaimed: unclaimed.reduce((sum, record) => sum + record.approximateValue, 0),
+  };
+}
+
+function aggregateInstitutions(): Institution[] {
+  const { workspace, claims } = currentStats();
+  return workspace.institutions.map((institution) => {
+    const institutionClaims = claims.filter((claim) => claim.institutionId === institution.id);
+    const resolved = institutionClaims.filter((claim) => terminalStates.includes(claim.state));
+    return {
+      ...institution,
+      matches: workspace.matches.filter((match) => match.institutionId === institution.id).length,
+      claims: institutionClaims.length,
+      pendingReview: institutionClaims.filter((claim) => pendingStates.includes(claim.state)).length,
+      resolved: resolved.length,
+      avgResolutionDays: mean(resolved.map(claimResolutionDays)),
+    };
+  });
+}
+
+let cachedMatches: MatchRecord[] = [];
 
 export const benefitService = {
-  /**
-   * Load the list of available pension fund institutions.
-   * Maps to GET /api/firms/
-   */
   async loadBenefits(): Promise<Institution[]> {
-    const firms = await listFirms();
-    return firms.map(mapFirmToInstitution);
+    return aggregateInstitutions();
   },
 
-  /**
-   * Search for benefits matching the beneficiary's national ID.
-   * Maps to GET /api/search/claimable?id_number={id}
-   * Returns match records derived from the aggregated search.
-   */
   async searchBenefits(profile: BeneficiaryProfile): Promise<MatchRecord[]> {
-    const response = await searchClaimable({ id_number: profile.nationalId });
-    cachedSearchResult = {
-      ...mapClaimableResponse(response),
-      cachedAt: Date.now(),
-    };
-    return cachedSearchResult.matches;
+    cachedMatches = getMatchesForProfile(profile);
+    saveLocalWorkspaceState({ profile, searchResults: cachedMatches });
+    return [...cachedMatches];
+  },
+
+  async searchByQuery(query: string): Promise<MatchRecord[]> {
+    const normalized = query.trim().toLowerCase();
+    if (normalized.length < 2) return [];
+
+    const matchingIds = new Set(
+      syntheticWorkspace.profiles
+        .filter((profile) =>
+          `${profile.firstName} ${profile.lastName}`.toLowerCase().includes(normalized) ||
+          profile.nationalId.toLowerCase().includes(normalized) ||
+          profile.region.toLowerCase().includes(normalized))
+        .map((profile) => profile.nationalId),
+    );
+    cachedMatches = syntheticWorkspace.matches.filter((match) =>
+      matchingIds.has(match.beneficiaryId) ||
+      match.institutionName.toLowerCase().includes(normalized) ||
+      match.benefitType.toLowerCase().includes(normalized) ||
+      match.id.toLowerCase().includes(normalized),
+    );
+    return [...cachedMatches];
   },
 };
 
 export const matchService = {
-  /**
-   * Get all matches from the most recent beneficiary search.
-   * If no search has been performed (or cache expired), returns empty array.
-   */
   async getMatches(): Promise<MatchRecord[]> {
-    if (!isCacheFresh()) return [];
-    return [...getCachedMatches()];
-  },
-
-  /**
-   * Get a specific match by its internal ID from the cached search results.
-   */
-  async getMatch(id: string): Promise<MatchRecord | undefined> {
-    if (!isCacheFresh()) return undefined;
-    return getCachedMatches().find((m) => m.id === id);
-  },
-
-  /**
-   * Get the match queue for a specific institution (firm).
-   * Maps to GET /api/firms/{firm}/members
-   * Returns simplified match-like rows for the institution view.
-   */
-  async getInstitutionMatches(instId: string = 'gipf'): Promise<Array<{
-    id: string;
-    beneficiary: string;
-    benefitType: string;
-    confidence: number;
-    signals: number;
-    status: string;
-    date: string;
-  }>> {
-    try {
-      const members = await getFirmMembers(instId);
-      return members.map((m: FirmMember) => ({
-        id: `MQ-${m.firm}-${m.ref_number ?? Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-        beneficiary: `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || 'Unknown',
-        benefitType: 'Pension',
-        confidence: m.date_of_birth ? 85 : 60,
-        signals: [m.date_of_birth, m.employer, m.ref_number].filter(Boolean).length,
-        status: m.status ?? 'Pending Review',
-        date: m.date_joined?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
-      }));
-    } catch {
-      return [];
+    const state = loadLocalWorkspaceState();
+    const storedMatches = state.searchResults;
+    if (storedMatches.length) {
+      cachedMatches = storedMatches;
+      return [...storedMatches];
     }
+    cachedMatches = getMatchesForProfile(state.profile);
+    return [...cachedMatches];
+  },
+
+  async getMatch(id: string): Promise<MatchRecord | undefined> {
+    const fromCache = cachedMatches.find((match) => match.id === id);
+    return fromCache ?? syntheticWorkspace.matches.find((match) => match.id === id);
+  },
+
+  async getInstitutionMatches(instId = 'gipf') {
+    return syntheticWorkspace.matches
+      .filter((match) => match.institutionId === instId)
+      .slice(0, 100)
+      .map((match) => ({
+        id: match.id,
+        beneficiary: match.beneficiaryName,
+        benefitType: match.benefitType,
+        confidence: match.confidence,
+        signals: match.signals.length,
+        status: match.status,
+        date: match.dateIdentified,
+      }));
   },
 };
 
 export const claimService = {
-  /**
-   * Get all claims submitted since the backend started.
-   * Maps to GET /api/claims/
-   * Note: Claims are stored in memory and lost on Flask restart.
-   */
   async getClaims(): Promise<Claim[]> {
-    try {
-      const response = await listClaims();
-      return response.claims.map(mapClaimRecord);
-    } catch {
-      return [];
-    }
+    return getWorkspaceSnapshot().claims;
   },
 
-  /**
-   * Get a specific claim by its API-generated ID.
-   */
   async getClaim(id: string): Promise<Claim | undefined> {
-    const claims = await this.getClaims();
-    return claims.find((c) => c.id === id);
+    return getWorkspaceSnapshot().claims.find((claim) => claim.id === id);
   },
 
-  /**
-   * Submit a new claim to the backend.
-   * Maps to POST /api/claims/
-   * The claim data comes from the match (firm, ref_number) and beneficiary (id_number).
-   */
   async createClaim(match: MatchRecord): Promise<Claim> {
-    const response = await createClaim({
-      id_number: match.beneficiaryId,
-      firm: match.institutionId,
-      ref_number: match.institutionReference,
-      claim_type: 'Withdrawal',
-      amount_claimed: match.potentialValue,
-      notes: `Claim submitted via OwaFind for ${match.benefitType}`,
-    });
-    return mapClaimRecord(response, match);
+    const now = new Date().toISOString();
+    const id = `OWF-LOCAL-${Date.now().toString(36).toUpperCase()}`;
+    return {
+      id,
+      matchId: match.id,
+      beneficiaryId: match.beneficiaryId,
+      beneficiaryName: match.beneficiaryName,
+      benefitType: match.benefitType,
+      institutionId: match.institutionId,
+      institutionName: match.institutionName,
+      referenceNumber: `LOCAL-${id.slice(-8)}`,
+      state: 'DRAFT',
+      status: 'DRAFT',
+      potentialValue: match.potentialValue,
+      amount: match.potentialValue,
+      submittedAt: now,
+      createdAt: now,
+      updatedAt: now,
+      documents: [],
+      timeline: [{
+        id: `${id}-EVENT-1`,
+        timestamp: now,
+        label: 'Claim drafted',
+        description: 'A local claim draft was created. It has not been sent to an institution.',
+        completed: true,
+        current: true,
+      }],
+    };
   },
 
-  /**
-   * Legacy method kept for compatibility.
-   * Submits a claim (same as createClaim since the API doesn't distinguish draft vs submitted).
-   */
   async submitClaim(claim: Claim): Promise<Claim> {
-    // The API creates the claim directly. We map the claim back to the
-    // required POST fields and submit.
-    const response = await createClaim({
-      id_number: claim.beneficiaryId,
-      firm: claim.institutionId,
-      ref_number: claim.referenceNumber,
-      claim_type: 'Withdrawal',
-      amount_claimed: claim.potentialValue,
-      notes: claim.notes,
-    });
-    return mapClaimRecord(response);
+    const now = new Date().toISOString();
+    const submitted: Claim = {
+      ...claim,
+      state: 'SUBMITTED',
+      status: 'SUBMITTED',
+      submittedAt: now,
+      updatedAt: now,
+      timeline: [
+        ...claim.timeline.map((event) => ({ ...event, current: false })),
+        {
+          id: `${claim.id}-SUBMITTED`,
+          timestamp: now,
+          label: 'Claim submitted locally',
+          description: 'This claim is saved in this browser only and has not been sent to an institution.',
+          completed: true,
+          current: true,
+        },
+      ],
+    };
+    const claims = getWorkspaceSnapshot().claims;
+    saveLocalWorkspaceState({ claims: [submitted, ...claims.filter((item) => item.id !== submitted.id)] });
+    return submitted;
   },
 
-  async updateClaimStatus(claimId: string, _newState: ClaimState): Promise<void> {
-    // No API endpoint for updating claim status.
-    // The backend does not support this operation.
-    return Promise.resolve();
-  },
-
-  async getInstitutionClaims(instId: string = 'gipf'): Promise<Array<{
-    id: string;
-    beneficiary: string;
-    benefitType: string;
-    institution: string;
-    status: string;
-    value: number;
-    date: string;
-  }>> {
-    try {
-      const members = await getFirmMembers(instId);
-      return members.map((m: FirmMember) => ({
-        id: `OWF-${m.firm}-${m.ref_number ?? Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-        beneficiary: `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || 'Unknown',
-        benefitType: 'Pension',
-        institution: m.label ?? m.firm,
-        status: m.status ?? 'SUBMITTED',
-        value: m.balance_nad ?? 0,
-        date: m.date_joined?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
-      }));
-    } catch {
-      return [];
+  async updateClaimStatus(claimId: string, newState: ClaimState): Promise<void> {
+    const claims = getWorkspaceSnapshot().claims;
+    const claim = claims.find((item) => item.id === claimId);
+    if (!claim) throw new Error(`Claim ${claimId} was not found in the local workspace.`);
+    if (!stateTransitions[claim.state].includes(newState)) {
+      throw new Error(`Claim cannot transition from ${claim.state} to ${newState}.`);
     }
+    const now = new Date().toISOString();
+    const updated: Claim = {
+      ...claim,
+      state: newState,
+      status: newState,
+      updatedAt: now,
+      timeline: [
+        ...claim.timeline.map((event) => ({ ...event, current: false })),
+        {
+          id: `${claim.id}-${Date.now()}`,
+          timestamp: now,
+          label: newState.replace(/_/g, ' '),
+          description: 'Status updated in the local synthetic workspace.',
+          completed: true,
+          current: true,
+        },
+      ],
+    };
+    saveLocalWorkspaceState({ claims: claims.map((item) => item.id === claimId ? updated : item) });
+  },
+
+  async getInstitutionClaims(instId = 'gipf') {
+    return getWorkspaceSnapshot().claims
+      .filter((claim) => claim.institutionId === instId)
+      .map((claim) => ({
+        id: claim.id,
+        beneficiary: claim.beneficiaryName,
+        benefitType: claim.benefitType,
+        institution: claim.institutionName ?? instId,
+        status: claim.state,
+        value: claim.amount ?? claim.potentialValue,
+        date: claim.createdAt ?? claim.submittedAt,
+      }));
   },
 
   getValidTransitions(current: ClaimState): ClaimState[] {
-    const transitions: Record<ClaimState, ClaimState[]> = {
-      DRAFT: ['SUBMITTED'],
-      SUBMITTED: ['IDENTITY_REVIEW'],
-      IDENTITY_REVIEW: ['EVIDENCE_REVIEW', 'MORE_INFORMATION_REQUIRED', 'REJECTED'],
-      EVIDENCE_REVIEW: ['INSTITUTION_REVIEW', 'MORE_INFORMATION_REQUIRED', 'REJECTED'],
-      INSTITUTION_REVIEW: ['APPROVED', 'REJECTED', 'MORE_INFORMATION_REQUIRED'],
-      MORE_INFORMATION_REQUIRED: ['RESUBMITTED', 'REJECTED'],
-      RESUBMITTED: ['EVIDENCE_REVIEW'],
-      APPROVED: ['CLOSED'],
-      REJECTED: ['APPEAL', 'CLOSED'],
-      APPEAL: ['INSTITUTION_REVIEW', 'CLOSED'],
-      CLOSED: [],
-    };
-    return transitions[current] || [];
+    return [...stateTransitions[current]];
   },
 };
 
 export const documentService = {
-  async uploadDocument(_file: File, _type: UploadedDocument['type']): Promise<UploadedDocument> {
-    // No API endpoint for document upload.
-    // Return a minimal stub so the UI flow can continue, but mark it
-    // as not backed by the server.
-    return {
-      id: `doc-local-${Date.now()}`,
-      name: _file.name,
-      type: _type,
-      size: _file.size,
-      uploadStatus: 'verified',
+  async uploadDocument(file: File, type: UploadedDocument['type']): Promise<UploadedDocument> {
+    const document: UploadedDocument = {
+      id: `DOC-LOCAL-${Date.now().toString(36).toUpperCase()}`,
+      name: file.name,
+      type,
+      size: file.size,
+      uploadStatus: 'needs_review',
       uploadedAt: new Date().toISOString(),
-      verificationStatus: 'verified',
+      verificationStatus: 'pending',
     };
+    const documents = loadLocalWorkspaceState().documents;
+    saveLocalWorkspaceState({ documents: [document, ...documents] });
+    return document;
   },
 
-  async verifyDocument(doc: UploadedDocument): Promise<UploadedDocument> {
-    // No API endpoint. Return the document as verified for demo continuity.
-    return { ...doc, uploadStatus: 'verified', verificationStatus: 'verified' };
+  async verifyDocument(document: UploadedDocument): Promise<UploadedDocument> {
+    return { ...document, uploadStatus: 'needs_review', verificationStatus: 'needs_review' };
   },
 
-  async removeDocument(_docId: string): Promise<void> {
-    // No API endpoint. No-op.
-    return Promise.resolve();
+  async removeDocument(docId: string): Promise<void> {
+    const documents = loadLocalWorkspaceState().documents.filter((document) => document.id !== docId);
+    saveLocalWorkspaceState({ documents });
   },
 };
 
 export const notificationService = {
   async getNotifications(): Promise<Notification[]> {
-    // No API endpoint for notifications.
-    return [];
+    return getWorkspaceSnapshot().notifications;
   },
 
-  async markAsRead(_id: string): Promise<void> {
-    return Promise.resolve();
+  async markAsRead(id: string): Promise<void> {
+    const notifications = loadLocalWorkspaceState().notifications.map((item) =>
+      item.id === id ? { ...item, read: true } : item,
+    );
+    saveLocalWorkspaceState({ notifications });
   },
 
   async markAllAsRead(): Promise<void> {
-    return Promise.resolve();
+    saveLocalWorkspaceState({
+      notifications: loadLocalWorkspaceState().notifications.map((item) => ({ ...item, read: true })),
+    });
   },
 };
 
 export const institutionService = {
-  /**
-   * Get the list of pension fund firms from the API.
-   * Maps to GET /api/firms/
-   */
   async getInstitutions(): Promise<Institution[]> {
-    try {
-      const firms = await listFirms();
-      return firms.map(mapFirmToInstitution);
-    } catch {
-      return [];
-    }
+    return aggregateInstitutions();
   },
 };
 
 export const analyticsService = {
-  /**
-   * Institution-level statistics derived from /api/firms/ and /api/search/dormant
-   */
   async getInstitutionStats() {
-    try {
-      const [firms, dormant] = await Promise.all([
-        listFirms(),
-        listDormant(),
-      ]);
-      return {
-        potentialMatches: firms.reduce((sum, f) => sum + f.members, 0),
-        claims: 0, // no claim count per firm
-        pendingReview: 0,
-        resolved: 0,
-        avgResolutionDays: 0,
-        totalDormantValue: dormant.total_dormant,
-        dormantCount: dormant.count,
-      };
-    } catch {
-      return {
-        potentialMatches: 0,
-        claims: 0,
-        pendingReview: 0,
-        resolved: 0,
-        avgResolutionDays: 0,
-        totalDormantValue: 0,
-        dormantCount: 0,
-      };
-    }
+    const stats = currentStats();
+    return {
+      potentialMatches: stats.workspace.matches.length,
+      claims: stats.claims.length,
+      pendingReview: stats.claims.filter((claim) => pendingStates.includes(claim.state)).length,
+      resolved: stats.resolved.length,
+      avgResolutionDays: stats.avgResolutionDays,
+      totalDormantValue: stats.workspace.benefitRecords
+        .filter((record) => record.status === 'dormant')
+        .reduce((sum, record) => sum + record.approximateValue, 0),
+      dormantCount: stats.workspace.benefitRecords.filter((record) => record.status === 'dormant').length,
+    };
   },
 
-  /**
-   * Regulator statistics from dormant and multi-firm endpoints
-   */
   async getRegulatorStats() {
-    try {
-      const [dormant, multiFirm] = await Promise.all([
-        listDormant(),
-        listMultiFirm(),
-      ]);
-      return {
-        totalBenefits: dormant.total_dormant + multiFirm.total_balance,
-        potentialMatches: multiFirm.count,
-        verifiedMatches: 0,
-        claims: 0,
-        resolved: 0,
-        avgResolutionDays: 0,
-      };
-    } catch {
-      return {
-        totalBenefits: 0,
-        potentialMatches: 0,
-        verifiedMatches: 0,
-        claims: 0,
-        resolved: 0,
-        avgResolutionDays: 0,
-      };
-    }
+    const stats = currentStats();
+    return {
+      totalBenefits: stats.totalUnclaimed,
+      potentialMatches: stats.workspace.matches.length,
+      verifiedMatches: stats.verifiedMatches,
+      claims: stats.claims.length,
+      resolved: stats.resolved.length,
+      avgResolutionDays: stats.avgResolutionDays,
+    };
   },
 
-  /**
-   * Executive statistics from dormant and multi-firm endpoints
-   */
   async getExecutiveStats() {
-    try {
-      const [dormant, multiFirm, firms] = await Promise.all([
-        listDormant(),
-        listMultiFirm(),
-        listFirms(),
-      ]);
-      return {
-        totalBenefits: dormant.total_dormant + multiFirm.total_balance,
-        potentialMatches: multiFirm.count,
-        verifiedMatches: 0,
-        openClaims: 0,
-        resolvedClaims: 0,
-        potentialRecoveryValue: dormant.total_dormant + multiFirm.total_balance,
-        avgResolutionTime: 0,
-        activeInstitutions: firms.length,
-      };
-    } catch {
-      return {
-        totalBenefits: 0,
-        potentialMatches: 0,
-        verifiedMatches: 0,
-        openClaims: 0,
-        resolvedClaims: 0,
-        potentialRecoveryValue: 0,
-        avgResolutionTime: 0,
-        activeInstitutions: 0,
-      };
-    }
+    const stats = currentStats();
+    const openClaimValue = stats.open.reduce((sum, claim) => sum + (claim.amount ?? claim.potentialValue), 0);
+    return {
+      totalBenefits: stats.totalUnclaimed,
+      potentialMatches: stats.workspace.matches.length,
+      verifiedMatches: stats.verifiedMatches,
+      openClaims: stats.open.length,
+      resolvedClaims: stats.resolved.length,
+      potentialRecoveryValue: stats.totalUnclaimed,
+      openClaimValue,
+      avgResolutionTime: stats.avgResolutionDays,
+      activeInstitutions: stats.workspace.institutions.length,
+      institutionsWithRecords: new Set(stats.workspace.benefitRecords.map((record) => record.institutionId)).size,
+    };
   },
 
   async getBenefitCategoryData() {
-    // No API endpoint for category breakdown.
-    return [];
+    const { workspace, claims } = currentStats();
+    return [...new Set(workspace.benefitRecords.map((record) => record.type))].map((type) => ({
+      label: type,
+      value: workspace.benefitRecords
+        .filter((record) => record.type === type && record.status === 'unclaimed')
+        .reduce((sum, record) => sum + record.approximateValue, 0),
+      claims: claims.filter((claim) => claim.benefitType === type).length,
+    }));
   },
 
   async getInstitutionActivityData() {
-    // No API endpoint for per-institution activity.
-    return [];
+    return aggregateInstitutions().map((institution) => ({
+      label: institution.short ?? institution.name,
+      matches: institution.matches,
+      claims: institution.claims,
+      resolved: institution.resolved,
+    }));
   },
 
   async getClaimVolumeData() {
-    // No API endpoint for monthly claim volumes.
-    return [];
+    const claims = getWorkspaceSnapshot().claims;
+    const months = Array.from({ length: 6 }, (_, index) => {
+      const date = new Date(`${AS_OF_DATE}T00:00:00.000Z`);
+      date.setUTCDate(1);
+      date.setUTCMonth(date.getUTCMonth() - (5 - index));
+      const key = date.toISOString().slice(0, 7);
+      return {
+        label: date.toLocaleString('en', { month: 'short', timeZone: 'UTC' }),
+        value: claims.filter((claim) => claim.submittedAt.slice(0, 7) === key).length,
+      };
+    });
+    return months;
   },
 
   async getResolutionTrendData() {
-    // No API endpoint for resolution trends.
-    return [];
+    const claims = getWorkspaceSnapshot().claims.filter((claim) => terminalStates.includes(claim.state));
+    const quarters = Array.from({ length: 8 }, (_, index) => {
+      const quarter = 3 + index;
+      const year = 2024 + Math.floor(quarter / 4);
+      const q = quarter % 4 + 1;
+      const label = `${year}-Q${q}`;
+      const periodClaims = claims.filter((claim) => {
+        const month = Number(claim.updatedAt.slice(5, 7));
+        return claim.updatedAt.slice(0, 4) === String(year) && Math.ceil(month / 3) === q;
+      });
+      return { label, resolved: periodClaims.length, avgDays: mean(periodClaims.map(claimResolutionDays)) };
+    });
+    return quarters;
   },
 
   async getRegionalData() {
-    // No API endpoint for regional distribution.
-    return [];
+    const { workspace } = currentStats();
+    const counts = new Map<string, number>();
+    for (const match of workspace.matches) counts.set(match.region, (counts.get(match.region) ?? 0) + 1);
+    return [...counts].map(([label, value]) => ({ label, value }));
   },
 
   async getExecutiveTrendData() {
-    // No API endpoint for executive quarterly trends.
-    return [];
+    const { workspace, claims } = currentStats();
+    return Array.from({ length: 11 }, (_, index) => {
+      const year = 2016 + index;
+      const yearMatches = workspace.matches.filter((match) => match.dateIdentified.slice(0, 4) === String(year));
+      return {
+        label: String(year),
+        matches: yearMatches.length,
+        verified: yearMatches.filter((match) => match.status === 'green').length,
+        claims: claims.filter((claim) => claim.submittedAt.slice(0, 4) === String(year)).length,
+      };
+    });
   },
 };
 
 export const profileService = {
-  /**
-   * No API endpoint for beneficiary profile.
-   * Profile data is entered by the user in the DiscoveryWizard
-   * and stored locally in AppContext.
-   */
-  async getProfile(): Promise<BeneficiaryProfile | null> {
-    return null;
+  async getProfile(): Promise<BeneficiaryProfile> {
+    return loadLocalWorkspaceState().profile;
   },
 
-  async updateProfile(_profile: BeneficiaryProfile): Promise<BeneficiaryProfile> {
-    // No API endpoint. Return as-is.
-    return _profile;
+  async updateProfile(profile: BeneficiaryProfile): Promise<BeneficiaryProfile> {
+    saveLocalWorkspaceState({ profile });
+    return profile;
   },
 };
 
 export const riskService = {
   async getRiskAlerts(): Promise<RiskAlert[]> {
-    // No API endpoint for risk alerts.
-    return [];
+    return getWorkspaceSnapshot().riskAlerts;
   },
 };
 
 export const auditService = {
   async getAuditEvents(): Promise<AuditEvent[]> {
-    // No API endpoint for audit events.
-    return [];
+    return [...getWorkspaceSnapshot().auditEvents].sort((a, b) =>
+      b.timestamp.localeCompare(a.timestamp),
+    );
   },
 };
 
 export const supportService = {
   async getFAQs(): Promise<FAQ[]> {
-    // No API endpoint. Return hardcoded FAQs that are purely
-    // informational and not business data.
-    return [
-      {
-        id: 'faq1',
-        question: 'What is OwaFind?',
-        answer: 'OwaFind is a platform that helps you discover financial benefits that may belong to you — such as pension benefits, retirement funds, life insurance, funeral benefits, and more. We identify potential matches and guide you through the claims process.',
-        category: 'General',
-      },
-      {
-        id: 'faq2',
-        question: 'Does OwaFind hold my money?',
-        answer: 'No. OwaFind does not hold customer funds. We help you discover potential benefits and connect you with the institution that holds the benefit. The institution remains responsible for verification, approval, and payment.',
-        category: 'General',
-      },
-      {
-        id: 'faq3',
-        question: 'What does a potential match mean?',
-        answer: 'A potential match means our system has identified a benefit record that may belong to you based on your identity information. It does NOT mean you are legally entitled to the benefit. Final verification is done by the holding institution.',
-        category: 'Matching',
-      },
-      {
-        id: 'faq4',
-        question: 'How accurate is the matching?',
-        answer: 'Our matching system uses the pension funds API to search across GIPF, Sanlam, and Old Mutual databases. Results are returned directly from the institutions\' records.',
-        category: 'Matching',
-      },
-      {
-        id: 'faq5',
-        question: 'What documents do I need to claim?',
-        answer: 'Typically you will need your ID document, proof of employment, and any relevant certificates (marriage, death, beneficiary). The specific documents depend on the benefit type and will be listed during the claim process.',
-        category: 'Claims',
-      },
-      {
-        id: 'faq6',
-        question: 'How long does a claim take?',
-        answer: 'Claim resolution times vary by institution and benefit type. You can track your claim status through your dashboard.',
-        category: 'Claims',
-      },
-      {
-        id: 'faq7',
-        question: 'Is my information safe?',
-        answer: 'OwaFind protects sensitive information. Your data is used only for matching and claims purposes.',
-        category: 'Privacy',
-      },
-      {
-        id: 'faq8',
-        question: 'Can I withdraw consent?',
-        answer: 'Yes. You can withdraw consent at any time from your Settings page under Privacy.',
-        category: 'Privacy',
-      },
-      {
-        id: 'faq9',
-        question: 'What if my claim is rejected?',
-        answer: 'If your claim is rejected, the institution will provide a reason. You may be able to submit an appeal or provide additional information. Check your claim tracking page for details.',
-        category: 'Claims',
-      },
-      {
-        id: 'faq10',
-        question: 'Does OwaFind charge fees?',
-        answer: 'OwaFind is a free service for beneficiaries. There are no charges for searching, matching, or submitting claims.',
-        category: 'General',
-      },
-    ];
+    return getWorkspaceSnapshot().faqs;
   },
 
   async getTickets(): Promise<SupportTicket[]> {
-    // No API endpoint for support tickets.
-    return [];
+    return getWorkspaceSnapshot().supportTickets;
   },
 
   async createTicket(subject: string, category: string, message: string): Promise<SupportTicket> {
-    // No API endpoint. Return a local-only stub.
-    return {
-      id: `OWF-${Date.now()}`,
+    const now = new Date().toISOString();
+    const ticket: SupportTicket = {
+      id: `SUP-LOCAL-${Date.now().toString(36).toUpperCase()}`,
       subject,
       category,
       status: 'open',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      messages: [{ author: 'You', message, timestamp: new Date().toISOString() }],
+      createdAt: now,
+      updatedAt: now,
+      messages: [{ author: 'You', message, timestamp: now }],
     };
+    const tickets = loadLocalWorkspaceState().tickets;
+    saveLocalWorkspaceState({ tickets: [ticket, ...tickets] });
+    return ticket;
   },
 };
 
-// Export health check for connection status
 export const healthService = {
   async getHealth() {
-    try {
-      await getHealth();
-      return { healthy: true };
-    } catch {
-      return { healthy: false };
-    }
+    return { healthy: true };
   },
 
   async getServiceInfo() {
-    try {
-      return await getServiceInfo();
-    } catch {
-      return { service: 'Namibia Pension Funds API', databases: [] };
-    }
+    return { service: 'Local synthetic workspace', asOfDate: AS_OF_DATE };
   },
 };

@@ -55,7 +55,7 @@ export function MatchResultsPage() {
           <div>
             <p className="text-sm text-slate-500">Total potential value identified</p>
             <p className="text-3xl font-bold font-display text-primary-700 mt-1">{formatCurrency(totalValue)}</p>
-            <p className="text-xs text-slate-400 mt-1">Across {matches.length} potential {matches.length === 1 ? 'match' : 'matches'} • From Pension Funds API</p>
+            <p className="text-xs text-slate-400 mt-1">Across {matches.length} potential {matches.length === 1 ? 'match' : 'matches'} • Fictional local records</p>
           </div>
           <div className="flex gap-3">
             {matches.filter((m) => m.status === 'green').length > 0 && (

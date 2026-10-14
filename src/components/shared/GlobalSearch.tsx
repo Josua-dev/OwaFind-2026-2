@@ -5,9 +5,8 @@ import { Input } from '@/components/ui/Input';
 import { Search as SearchIcon, FileText, Target, Building2, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
-import { benefitService, claimService, institutionService, matchService } from '@/services';
+import { benefitService, claimService, institutionService } from '@/services';
 import { formatCurrency } from '@/utils/format';
-import { mapClaimableResponse } from '@/services/dataMapping';
 import type { MatchRecord, Claim, Institution } from '@/types';
 import { Button } from '@/components/ui/Button';
 
@@ -31,7 +30,6 @@ const ROLE_INSTITUTION_LINK: Record<string, string> = {
 
 export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { role, profile } = useApp();
@@ -77,15 +75,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
       setLoading(true);
       setError(null);
       try {
-        // Use searchClaimable which accepts both id_number and name parameters
-        // This allows us to search by either ID or name with one endpoint
-        const response = await searchClaimable({
-          id_number: query.trim(),
-          name: query.trim()
-        });
-
-        // Map the response to MatchRecord format
-        const matchRecords = mapClaimableResponse(response);
+        const matchRecords = await benefitService.searchByQuery(query);
         setMatches(matchRecords);
       } catch (err) {
         console.error('Failed to search matches:', err);
@@ -95,7 +85,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
       }
     };
 
-    // Only search if query has at least 2 characters to avoid excessive API calls
+    // Avoid scanning the local indexes until a useful query is available.
     if (query.trim().length >= 2) {
       searchMatches();
     } else {
@@ -164,8 +154,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
         }
       });
 
-      // Add benefit records (these are essentially the same as matches in API context)
-      // In the real API, benefit records would come from the same search as matches
+      // Benefit summaries point to their corresponding local match record.
       matches.forEach((m) => {
         if (m.benefitType.toLowerCase().includes(q) ||
             m.institutionName.toLowerCase().includes(q)) {
@@ -237,13 +226,13 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
           </div>
         )}
 
-        {!loading && !error && searchResults.length === 0 && query.trim() !== '' ? (
+        {!loading && !error && results.length === 0 && query.trim() !== '' ? (
           <p className="text-center text-sm text-slate-400 py-8">No results found for "{query}"</p>
         ) : null}
 
-        {!loading && searchResults.length > 0 && (
+        {!loading && results.length > 0 && (
           <div className="max-h-96 overflow-y-auto scrollbar-thin space-y-1">
-            {searchResults.map((r) => {
+            {results.map((r) => {
               const Icon = r.icon;
               return (
                 <Link
@@ -266,7 +255,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
           </div>
         )}
 
-        {!loading && searchResults.length === 0 && query.trim() === '' && (
+        {!loading && results.length === 0 && query.trim() === '' && (
           <p className="text-center text-sm text-slate-400 py-8">Start typing to search across your data</p>
         )}
       </div>

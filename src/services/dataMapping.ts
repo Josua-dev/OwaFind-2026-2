@@ -175,20 +175,22 @@ export function mapClaimableResponse(response: ClaimableResponse): ClaimableSear
 
 export function mapSearchByIdResults(results: {
   id_number: string;
+  firms?: string[];
   total_balance: number;
   dormant_balance: number;
   results: FirmMember[];
 }): MatchRecord[] {
-  return results.results.map((member) => {
+  return results.results.map((member, index) => {
     const balance = member.balance_nad ?? 0;
     const confidence = member.date_of_birth ? 90 : 60;
+    const institutionId = results.firms?.[index] ?? 'unknown';
     return {
-      id: `id-${member.firm}-${member.ref_number ?? Math.random().toString(36).slice(2, 8)}`,
+      id: `id-${institutionId}-${member.ref_number ?? index}`,
       beneficiaryId: member.id_number,
       beneficiaryName: `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim(),
       benefitType: 'Pension',
-      institutionId: member.firm,
-      institutionName: member.label ?? member.firm,
+      institutionId,
+      institutionName: institutionId,
       institutionReference: member.ref_number,
       potentialValue: balance,
       confidence,
@@ -206,10 +208,10 @@ export function mapSearchByIdResults(results: {
 
 export function mapDormantResults(results: DormantResults): BenefitRecord[] {
   return results.results.map((member) => ({
-    id: `dormant-${member.firm}-${member.ref_number ?? ''}`,
+    id: `dormant-${member.ref_number ?? ''}`,
     type: 'Pension',
-    institutionId: member.firm,
-    institutionName: member.label ?? member.firm,
+    institutionId: 'unknown',
+    institutionName: 'Unknown institution',
     reference: member.ref_number ?? '',
     approximateValue: member.balance_nad ?? 0,
     region: 'Namibia',
@@ -261,10 +263,13 @@ export function mapClaimRecord(claim: ClaimRecord, match: MatchRecord | null = n
     beneficiaryName: match?.beneficiaryName ?? '',
     benefitType: 'Pension',
     institutionId: claim.firm,
+    institutionName: match?.institutionName ?? claim.firm,
     referenceNumber: claim.ref_number,
     state: 'SUBMITTED',
     potentialValue: claim.amount_claimed ?? 0,
+    amount: claim.amount_claimed ?? 0,
     submittedAt: claim.created_at,
+    createdAt: claim.created_at,
     updatedAt: claim.created_at,
     documents: [],
     timeline: [

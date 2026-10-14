@@ -63,8 +63,7 @@ export function RiskPanel() {
       </div>
 
       <Alert tone="info" title="Risk Alerts Data Source">
-        This panel displays risk alerts from the Pension Funds API.
-        Currently, risk alert data is not available through the API endpoint.
+        These are fictional risk signals generated for the local workspace, not verified institutional findings.
       </Alert>
 
       <div className="grid grid-cols-3 gap-4">
@@ -109,10 +108,10 @@ export function RiskPanel() {
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-slate-500">No risk alerts available from the Pension Funds API.</p>
+          <p className="text-slate-500">No synthetic risk alerts are available.</p>
           {alerts.length === 0 && (
             <p className="text-xs text-slate-400 mt-2">
-              Risk alert monitoring will be available when the API endpoint is implemented.
+              Risk alerts in this workspace are simulated and are not institution-verified.
             </p>
           )}
         </div>

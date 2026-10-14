@@ -5,13 +5,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(value: number): string {
-  return `N$ ${value.toLocaleString('en-NA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `N$${value.toLocaleString('en-NA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 export function formatCurrencyShort(value: number): string {
-  if (value >= 1_000_000) return `N$ ${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `N$ ${(value / 1_000).toFixed(1)}K`;
-  return `N$ ${value}`;
+  if (value >= 1_000_000) return `N$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `N$${(value / 1_000).toFixed(1)}K`;
+  return `N$${value}`;
 }
 
 export function formatDate(iso: string): string {

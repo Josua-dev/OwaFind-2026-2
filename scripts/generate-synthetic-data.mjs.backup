@@ -1,0 +1,905 @@
+// Deterministic Synthetic Data Generator for OwaFind
+// Generates synthetic data meeting exact balance constraints
+
+// Pseudo-random number generator
+
+
+function hashString(s) {
+
+  let h = 2166136261;
+
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+
+  return h >>> 0;
+
+}
+
+
+
+function mulberry32(seed) {
+
+  let a = seed;
+
+  return () => {
+
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+
+  };
+
+}
+
+// Configuration
+const CONFIG = {
+  // Seed for deterministic generation
+  SEED: 0xCAFEBABE,
+
+//
+
+
+
+
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+
+  };
+
+}
+  // Target counts
+  TOTAL_INSTITUTION_ACCOUNTS: 18500, // ≥18,500
+  TOTAL_DISTINCT_BENEFICIARIES: 12000, // ~10,000-14,000
+
+  // Financial constraints
+  TOTAL_UNCLAIMED_BALANCE_CENTS: 21870000000, // N$218,700,000.00 in cents
+
+  // Institution data from registry
+  INSTITUTION_REGISTRY: [
+    { id: 'gipf', name: 'Government Institutions Pension Fund (GIPF)', short: 'GIPF', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 1842, claims: 428, pendingReview: 96, resolved: 312, avgResolutionDays: 18.4 } },
+    { id: 'namcor-pension', name: 'Namcor Pension Fund', short: 'Namcor', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 286, claims: 74, pendingReview: 18, resolved: 52, avgResolutionDays: 16.8 } },
+    { id: 'nampower-provident', name: 'Nampower Provident Fund', short: 'Nampower', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 391, claims: 96, pendingReview: 24, resolved: 61, avgResolutionDays: 20.1 } },
+    { id: 'namwater-retirement', name: 'Namwater Retirement Fund', short: 'Namwater', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 214, claims: 51, pendingReview: 12, resolved: 34, avgResolutionDays: 19.2 } },
+    { id: 'nbc-retirement', name: 'NBC Retirement Fund', short: 'NBC', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 168, claims: 42, pendingReview: 9, resolved: 26, avgResolutionDays: 14.6 } },
+    { id: 'rossing-pension', name: 'Rossing Pension Fund', short: 'Rossing', type: 'Pension Fund', region: 'Arandis', metrics: { matches: 152, claims: 38, pendingReview: 8, resolved: 24, avgResolutionDays: 12.9 } },
+    { id: 'namport-retirement', name: 'Namport Retirement Fund', short: 'Namport', type: 'Pension Fund', region: 'Walvis Bay', metrics: { matches: 134, claims: 33, pendingReview: 7, resolved: 21, avgResolutionDays: 15.7 } },
+    { id: 'bon-provident', name: 'Bank of Namibia Provident Fund', short: 'BoN', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 98, claims: 26, pendingReview: 5, resolved: 16, avgResolutionDays: 11.3 } },
+    { id: 'mtc-pension', name: 'MTC Pension Fund', short: 'MTC', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 187, claims: 47, pendingReview: 11, resolved: 29, avgResolutionDays: 13.8 } },
+    { id: 'standard-bank-pension', name: 'Standard Bank Namibia Pension Fund', short: 'Std Bank', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 176, claims: 44, pendingReview: 10, resolved: 27, avgResolutionDays: 12.2 } },
+    { id: 'namib-mills-pension', name: 'Namib Mills Pension Fund', short: 'Nam Mills', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 76, claims: 19, pendingReview: 4, resolved: 11, avgResolutionDays: 17.5 } },
+    { id: 'transnamib-retirement', name: 'TransNamib Retirement Fund', short: 'TransNamib', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 163, claims: 41, pendingReview: 9, resolved: 25, avgResolutionDays: 16.1 } },
+    { id: 'capricorn-retirement', name: 'Capricorn Group Retirement Fund', short: 'Capricorn', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 158, claims: 39, pendingReview: 9, resolved: 24, avgResolutionDays: 13.4 } },
+    { id: 'pupkewitz-pension', name: 'Pupkewitz Group Pension Fund', short: 'Pupkewitz', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 112, claims: 28, pendingReview: 6, resolved: 17, avgResolutionDays: 15.2 } },
+    { id: 'nbw-pension', name: "Namibia Building Workers' Pension Fund", short: 'NBW', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 87, claims: 22, pendingReview: 4, resolved: 13, avgResolutionDays: 18.9 } },
+    { id: 'universities-retirement', name: 'Universities Retirement Fund', short: 'Universities', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 141, claims: 35, pendingReview: 8, resolved: 22, avgResolutionDays: 14.8 } },
+    { id: 'nhe-retirement', name: 'NHE Retirement Fund', short: 'NHE', type: 'Pension Fund', region: 'Windhoek', metrics: { matches: 129, claims: 34, pendingReview: 7, resolved: 19, avgResolutionDays: 17.2 } },
+    { id: 'sanlam-namibia', name: 'Sanlam Namibia', short: 'Sanlam', type: 'Insurer', region: 'Windhoek', metrics: { matches: 298, claims: 72, pendingReview: 19, resolved: 41, avgResolutionDays: 10.2 } },
+    { id: 'old-mutual-namibia', name: 'Old Mutual Namibia', short: 'Old Mutual', type: 'Insurer', region: 'Windhoek', metrics: { matches: 284, claims: 68, pendingReview: 17, resolved: 39, avgResolutionDays: 10.9 } },
+  ],
+};
+
+// Benefit types
+const BENEFIT_TYPES = [
+  'Pension',
+  'Retirement Fund',
+  'Life Insurance',
+  'Funeral Benefit',
+  'Employee Benefit',
+  'Death Benefit'
+];
+
+// Claim states
+const CLAIM_STATUSES = [
+  'SUBMITTED',
+  'IDENTITY_REVIEW',
+  'EVIDENCE_REVIEW',
+  'INSTITUTION_REVIEW',
+  'MORE_INFORMATION_REQUIRED',
+  'APPROVED',
+  'REJECTED',
+  'APPEAL',
+  'CLOSED'
+];
+
+// Match statuses
+const MATCH_STATUSES = ['green', 'amber', 'red'];
+
+// Signal strengths
+const SIGNAL_STRENGTHS = ['exact', 'strong', 'partial', 'weak', 'none'];
+
+// Document types
+const DOCUMENT_TYPES = [
+  'ID Document',
+  'Proof of Employment',
+  'Marriage Certificate',
+  'Death Certificate',
+  'Beneficiary Documentation',
+  'Other Supporting Evidence'
+];
+
+// Pseudo-random number generator
+function createRNG(seed) {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+
+
+// Generate fictional beneficiary names
+function generateFictionalBeneficiaries(count, rng) {
+  const firstNames = [
+    'Josua', 'Pendukeni', 'Gideon', 'Linea', 'Kornelius', 'Victoria', 'Fanuel', 'Selma',
+    'Barney', 'Ndeshi', 'Mateus', 'Frieda', 'Kauna', 'Ester', 'Johannes', 'Rosalia',
+    'Petrus', 'Magrieta', 'Immanuel', 'Lukas', 'Abraham', 'Sarah', 'David', 'Rachel',
+    'Samuel', 'Leah', 'Joseph', 'Rebecca', 'Benjamin', 'Rachel', 'Isaac', 'Rebekah',
+    'Jacob', 'Leah', 'Judah', 'Tamar', 'Dan', 'Bilhah', 'Naphtali', 'Zilpah', 'Gad',
+    'Asher', 'Issachar', 'Zebulun', 'Dinah'
+  ];
+
+  const lastNames = [
+    'Uuyuni', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera', 'Amutenya',
+    'Haufiku', 'Andreas', 'Sheya', 'Namwandi', 'Shikwambi', 'Namwandi', 'Nangolo', 'Gawanas', 'Muvangua',
+    'Ndjarakana', 'Hoveka', 'Tjipuka', 'Mutinga', 'Aman', 'Goagoseb', 'Gorasesb', 'Gonteb',
+    'Haihambo', 'Handunge', 'Hanga', 'Heita', 'Hidengo', 'Hifikepunye', 'Hood', 'Kamati',
+    'Kashima', 'Kehindi', 'Kooitjie', 'Krovitz', 'Kuutschab', 'Lage', 'Leonard', 'Lyamukeni'
+  ];
+
+  const beneficiaries = [];
+  for (let i = 0; i < count; i++) {
+    const firstName = firstNames[Math.floor(rng() * firstNames.length)];
+    const lastName = lastNames[Math.floor(rng() * lastNames.length)];
+    const dob = generateDateOfBirth(rng);
+    const nationalId = generateNationalId(rng);
+
+    beneficiaries.push({
+      id: `ben${i + 1}`,
+      firstName,
+      lastName,
+      dateOfBirth: dob,
+      nationalId,
+      previousName: '',
+      phone: generatePhoneNumber(rng),
+      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,
+      region: getRandomRegion(rng),
+      employmentHistory: generateEmploymentHistory(rng),
+      consentGiven: rng() > 0.5,
+      consentDate: rng() > 0.7 ? generateDate() : null,
+      profileCompletion: Math.floor(rng() * 100),
+      verificationStatus: rng() > 0.8 ? 'verified' : rng() > 0.6 ? 'pending' : 'unverified'
+    });
+  }
+
+  return beneficiaries;
+}
+
+// Generate date of birth (between 1940 and 2005)
+function generateDateOfBirth(rng) {
+  const year = 1940 + Math.floor(rng() * 65); // 1940-2005
+  const month = Math.floor(rng() * 12) + 1; // 1-12
+  const day = Math.floor(rng() * 28) + 1; // 1-28 (safe for all months)
+  return `${year.toString().padStart(4, '0')}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}`;
+}
+
+// Generate Namibian national ID (11 digits)
+function generateNationalId(rng) {
+  let id = '';
+  for (let i = 0; i < 11; i++) {
+    id += Math.floor(rng() * 10);
+  }
+  return id;
+}
+
+// Generate phone number
+function generatePhoneNumber(rng) {
+  const prefix = ['81', '82', '84', '85'][Math.floor(rng() * 4)];
+  const number = Math.floor(rng() * 10000000).toString().padStart(7, '0');
+  return `+264 ${prefix} ${number.substring(0, 3)} ${number.substring(3)}`;
+}
+
+// Get random region
+function getRandomRegion(rng) {
+  const regions = [
+    'Windhoek', 'Khomas', 'Erongo', 'Oshana', 'Ohangwena', 'Omusati', 'Oshikoto',
+    'Otjozondjupa', 'Kavango East', 'Kavango West', 'Zambezi', 'Kunene', 'Omaheke',
+    '//Karas', 'Hardap'
+  ];
+  return regions[Math.floor(rng() * regions.length)];
+}
+
+// Generate employment history
+function generateEmploymentHistory(rng) {
+  const employers = [
+    'NamPower', 'TransNamib', 'Air Namibia', 'Telecom Namibia', 'NamWater',
+    'Bank of Namibia', 'Development Bank of Namibia', 'Namibia Breweries',
+    'Fishcor', 'Namibia Dairies', 'Ohorongo Cement', 'Rossing Uranium',
+    'Langer Heinrich', 'Navachab Mine', 'Debmarine Namibia'
+  ];
+
+  const history = [];
+  const numJobs = Math.floor(rng() * 3) + 1; // 1-3 jobs
+
+  let startYear = 1980 + Math.floor(rng() * 20); // Started between 1980-2000
+
+  for (let i = 0; i < numJobs; i++) {
+    const employer = employers[Math.floor(rng() * employers.length)];
+    const employeeNumber = `${employer.substring(0, 2)}-${Math.floor(rng() * 10000)}`;
+    const yearsEmployed = Math.floor(rng() * 15) + 2; // 2-16 years
+    const endYear = startYear + yearsEmployed;
+
+    history.push({
+      id: `emp${i + 1}`,
+      employer,
+      employeeNumber,
+      startDate: `${startYear}-01`,
+      endDate: endYear > 2023 ? '' : `${endYear}-12`
+    });
+
+    startYear = endYear + Math.floor(rng() * 3) + 1; // Gap between jobs
+  }
+
+  return history;
+}
+
+// Generate institution data based on registry
+function generateInstitutions(rng) {
+  return CONFIG.INSTITUTION_REGISTRY.map((inst, index) => ({
+    id: inst.id,
+    name: inst.name,
+    type: inst.type,
+    region: inst.region,
+    matches: inst.metrics.matches,
+    claims: inst.metrics.claims,
+    pendingReview: inst.metrics.pendingReview,
+    resolved: inst.metrics.resolved,
+    avgResolutionDays: inst.metrics.avgResolutionDays,
+    demo: true,
+    short: inst.short
+  }));
+}
+
+// Generate benefit records
+function generateBenefitRecords(rng) {
+  const records = [];
+  let id = 1;
+
+  // Create some benefit records for each institution
+  for (const inst of CONFIG.INSTITUTION_REGISTRY) {
+    // Each institution gets 2-4 benefit records
+    const numRecords = Math.floor(rng() * 3) + 2;
+
+    for (let j = 0; j < numRecords; j++) {
+      const benefitType = BENEFIT_TYPES[Math.floor(rng() * BENEFIT_TYPES.length)];
+      const approximateValue = Math.floor(rng() * 500000) + 50000; // 50k-550k NAD
+      const status = rng() > 0.7 ? 'active' : rng() > 0.4 ? 'dormant' : 'unclaimed';
+
+      records.push({
+        id: `br${id++}`,
+        type: benefitType,
+        institutionId: inst.id,
+        institutionName: inst.name,
+        reference: `${inst.short}-${Math.floor(rng() * 9999)}`,
+        approximateValue,
+        region: inst.region,
+        status
+      });
+    }
+  }
+
+  return records;
+}
+
+// Generate claims
+function generateClaims(beneficiaries, benefitRecords, rng) {
+  const claims = [];
+  let id = 1;
+
+  // Create claims for some beneficiaries
+  const claimants = beneficiaries.filter(() => rng() > 0.3); // ~70% of beneficiaries have claims
+
+  for (const beneficiary of claimants) {
+    // Each claimant gets 1-3 claims
+    const numClaims = Math.floor(rng() * 3) + 1;
+
+    for (let j = 0; j < numClaims; j++) {
+      // Select a random benefit record
+      const benefitRecord = benefitRecords[Math.floor(rng() * benefitRecords.length)];
+
+      // Generate claim dates
+      const createdAt = generateDateTime(rng, 2024, 2026);
+      const updatedAt = generateDateTime(rng, new Date(createdAt).getFullYear(), 2026);
+      const submittedAt = generateDateTime(rng, new Date(createdAt).getFullYear(), new Date(updatedAt).getFullYear());
+
+      // Ensure chronological order: submittedAt <= updatedAt <= createdAt (in terms of processing)
+      const dates = [submittedAt, updatedAt, createdAt].sort();
+      [submittedAt, updatedAt, createdAt] = dates;
+
+      claims.push({
+        id: `OWF-2026-${String(id).padStart(6, '0')}`,
+        matchId: `match${id}`,
+        beneficiaryId: beneficiary.id,
+        beneficiaryName: `${beneficiary.firstName} ${beneficiary.lastName}`,
+        benefitType: benefitRecord.type,
+        institutionId: benefitRecord.institutionId,
+        institutionName: benefitRecord.institutionName,
+        referenceNumber: benefitRecord.reference,
+        state: CLAIM_STATUSES[Math.floor(rng() * CLAIM_STATUSES.length)],
+        potentialValue: benefitRecord.approximateValue,
+        amount: benefitRecord.approximateValue, // For now, same as potential
+        submittedAt,
+        updatedAt,
+        createdAt,
+        documents: generateDocuments(id, rng),
+        timeline: generateTimeline(submittedAt, updatedAt, createdAt, rng),
+        notes: rng() > 0.8 ? 'Additional notes about the claim.' : undefined
+      });
+
+      id++;
+    }
+  }
+
+  return claims;
+}
+
+// Generate documents for a claim
+function generateDocuments(claimId, rng) {
+  const docCount = Math.floor(rng() * 4) + 1; // 1-4 documents
+  const documents = [];
+
+  for (let i = 0; i < docCount; i++) {
+    const docType = DOCUMENT_TYPES[Math.floor(rng() * DOCUMENT_TYPES.length)];
+    const size = Math.floor(rng() * 1000000) + 50000; // 50KB-1MB
+
+    const uploadDate = generateDateTime(rng, 2024, 2026);
+
+    documents.push({
+      id: `doc-${claimId}-${i + 1}`,
+      claimId: `OWF-2026-${String(claimId).padStart(6, '0')}`,
+      name: `${docType.replace(/\s+/g, '_')}.pdf`,
+      type: docType,
+      size,
+      uploadStatus: rng() > 0.8 ? 'verified' : rng() > 0.5 ? 'needs_review' : 'scanning',
+      uploadedAt: uploadDate,
+      verificationStatus: rng() > 0.7 ? 'verified' : rng() > 0.4 ? 'pending' : 'needs_review'
+    });
+  }
+
+  return documents;
+}
+
+// Generate timeline events
+function generateTimeline(submittedAt, updatedAt, createdAt, rng) {
+  const events = [];
+  let id = 1;
+
+  // Always start with claim submitted
+  events.push({
+    id: `t${id++}`,
+    timestamp: submittedAt,
+    label: 'Claim Submitted',
+    description: 'Your claim was submitted to the pension fund.',
+    completed: true,
+    current: false
+  });
+
+  // Identity verification
+  if (rng() > 0.2) {
+    events.push({
+      id: `t${id++}`,
+      timestamp: generateDateBetween(submittedAt, updatedAt, rng),
+      label: 'Identity Verification',
+      description: 'Your identity was verified successfully.',
+      completed: true,
+      current: false
+    });
+  }
+
+  // Evidence review
+  if (rng() > 0.3) {
+    events.push({
+      id: `t${id++}`,
+      timestamp: generateDateBetween(submittedAt, updatedAt, rng),
+      label: 'Evidence Review',
+      description: 'Your submitted documents are currently being reviewed.',
+      completed: false,
+      current: rng() > 0.7 // Current if this is the latest incomplete event
+    });
+  }
+
+  // Institution review
+  if (rng() > 0.4) {
+    events.push({
+      id: `t${id++}`,
+      timestamp: generateDateBetween(submittedAt, updatedAt, rng),
+      label: 'Institution Review',
+      description: 'The institution will review your claim.',
+      completed: false,
+      current: false
+    });
+  }
+
+  // Resolution
+  if (rng() > 0.5) {
+    events.push({
+      id: `t${id++}`,
+      timestamp: generateDateBetween(submittedAt, updatedAt, rng),
+      label: 'Resolution',
+      description: 'The institution will communicate the final decision.',
+      completed: false,
+      current: false
+    });
+  }
+
+  return events;
+}
+
+// Generate date between two dates
+function generateDateBetween(startDateStr, endDateStr, rng) {
+  const startDate = new Date(startDateStr);
+  const endDate = new Date(endDateStr);
+  const timeDiff = endDate.getTime() - startDate.getTime();
+  const randomTime = startDate.getTime() + (rng() * timeDiff);
+  return new Date(randomTime).toISOString();
+}
+
+// Generate date/time string
+function generateDateTime(rng, startYear, endYear) {
+  const year = startYear + Math.floor(rng() * (endYear - startYear + 1));
+  const month = Math.floor(rng() * 12) + 1;
+  const day = Math.floor(rng() * 28) + 1;
+  const hour = Math.floor(rng() * 24);
+  const minute = Math.floor(rng() * 60);
+  const second = Math.floor(rng() * 60);
+
+  return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}Z`;
+}
+
+// Generate matches
+function generateMatches(beneficiaries, benefitRecords, rng) {
+  const matches = [];
+  let id = 1;
+
+  // Create matches for some beneficiaries
+  const matchedBeneficiaries = beneficiaries.filter(() => rng() > 0.4); // ~60% get matches
+
+  for (const beneficiary of matchedBeneficiaries) {
+    // Each beneficiary gets 1-3 matches
+    const numMatches = Math.floor(rng() * 3) + 1;
+
+    for (let j = 0; j < numMatches; j++) {
+      // Select a random benefit record
+      const benefitRecord = benefitRecords[Math.floor(rng() * benefitRecords.length)];
+
+      // Generate match data
+      const confidence = Math.floor(rng() * 60) + 40; // 40-99
+      const status = confidence >= 80 ? 'green' : confidence >= 50 ? 'amber' : 'red';
+      const signals = generateSignals(rng);
+
+      matches.push({
+        id: `match${id++}`,
+        beneficiaryId: beneficiary.id,
+        beneficiaryName: `${beneficiary.firstName} ${beneficiary.lastName}`,
+        benefitType: benefitRecord.type,
+        institutionId: benefitRecord.institutionId,
+        institutionName: benefitRecord.institutionName,
+        institutionReference: benefitRecord.reference,
+        potentialValue: benefitRecord.approximateValue,
+        confidence,
+        status,
+        signals,
+        employmentPeriod: `${Math.floor(rng() * 20 + 1980)}–${Math.floor(rng() * 20 + 2000)}`,
+        dateIdentified: generateDateTime(rng, 2024, 2026),
+        region: beneficiary.region
+      });
+    }
+  }
+
+  return matches;
+}
+
+// Generate signals for a match
+function generateSignals(rng) {
+  const signalTypes = ['Name', 'Date of Birth', 'National ID', 'Employment History', 'Previous Name'];
+  const signals = [];
+
+  // Each signal type gets a random strength
+  for (const type of signalTypes) {
+    signals.push({
+      label: type,
+      strength: SIGNAL_STRENGTHS[Math.floor(rng() * SIGNAL_STRENGTHS.length)]
+    });
+  }
+
+  return signals;
+}
+
+// Generate notifications
+function generateNotifications(beneficiaries, claims, rng) {
+  const notifications = [];
+  let id = 1;
+
+  // System notifications
+  notifications.push({
+    id: `n${id++}`,
+    title: 'Welcome to OwaFind',
+    message: 'Your account has been set up. Complete your profile to improve match accuracy.',
+    type: 'system',
+    read: true,
+    createdAt: generateDateTime(rng, 2026, 2026),
+    link: '/app/profile'
+  });
+
+  // Match notifications for some beneficiaries
+  const notifiedBeneficiaries = beneficiaries.filter(() => rng() > 0.5);
+  for (const beneficiary of notifiedBeneficiaries) {
+    notifications.push({
+      id: `n${id++}`,
+      title: 'Potential benefit identified',
+      message: `A potential retirement fund benefit of N$ ${formatCurrency(Math.floor(rng() * 100000) + 10000)} was found with ${getRandomInstitution(CONFIG.INSTITUTION_REGISTRY, rng).name}.`,
+      type: 'match',
+      read: rng() > 0.7,
+      createdAt: generateDateTime(rng, 2026, 2026),
+      link: '/app/matches'
+    });
+  }
+
+  // Document notifications for some claims
+  const notifiedClaims = claims.filter(() => rng() > 0.6);
+  for (const claim of notifiedClaims) {
+    notifications.push({
+      id: `n${id++}`,
+      title: 'Document required',
+      message: 'Additional evidence is required for your claim.',
+      type: 'document',
+      read: rng() > 0.5,
+      createdAt: generateDateTime(rng, 2026, 2026),
+      link: `/app/claims/${claim.id}`
+    });
+  }
+
+  // Claim update notifications
+  const updatedClaims = claims.filter(() => rng() > 0.7);
+  for (const claim of updatedClaims) {
+    notifications.push({
+      id: `n${id++}`,
+      title: 'Claim update',
+      message: 'Your claim has moved to Evidence Review stage.',
+      type: 'claim',
+      read: true,
+      createdAt: generateDateTime(rng, 2026, 2026),
+      link: `/app/claims/${claim.id}`
+    });
+  }
+
+  return notifications;
+}
+
+// Generate risk alerts
+function generateRiskAlerts(claims, rng) {
+  const alerts = [];
+  let id = 1;
+
+  // Only generate alerts for some claims
+  const alertClaims = claims.filter(() => rng() > 0.9); // ~10% get alerts
+
+  for (const claim of alertClaims) {
+    const alertTypes = ['duplicate_identity', 'reused_document', 'multiple_beneficiary', 'suspicious_pattern'];
+    const type = alertTypes[Math.floor(rng() * alertTypes.length)];
+    const severity = rng() > 0.8 ? 'high' : rng() > 0.5 ? 'medium' : 'low';
+
+    alerts.push({
+      id: `ra${id++}`,
+      type,
+      severity,
+      description: getAlertDescription(type),
+      claimId: claim.id,
+      createdAt: generateDateTime(rng, 2026, 2026),
+      status: rng() > 0.7 ? 'open' : rng() > 0.4 ? 'reviewing' : 'resolved'
+    });
+  }
+
+  return alerts;
+}
+
+// Get alert description
+function getAlertDescription(type) {
+  const descriptions = {
+    duplicate_identity: 'Two claims reference the same national ID but different names. Requires human review.',
+    reused_document: 'Document uploaded for claim was previously used in a different claim.',
+    multiple_beneficiary: 'Beneficiary linked to three different benefit records across institutions.',
+    suspicious_pattern: 'Rapid sequential claims from same device fingerprint within 24 hours.'
+  };
+  return descriptions[type] || 'Unknown alert type.';
+}
+
+// Generate audit events
+function generateAuditEvents(claims, rng) {
+  const events = [];
+  let id = 1;
+
+  // System events
+  events.push({
+    id: `ae${id++}`,
+    timestamp: generateDateTime(rng, 2026, 2026),
+    actor: 'System',
+    action: 'Identity verification completed',
+    target: 'OWF-2026-00001',
+    details: 'Automated identity check passed'
+  });
+
+  // User events
+  for (let i = 0; i < Math.min(10, claims.length); i++) {
+    const claim = claims[i];
+    events.push({
+      id: `ae${id++}`,
+      timestamp: generateDateTime(rng, 2026, 2026),
+      actor: `${claim.beneficiaryName}`,
+      action: 'Uploaded document',
+      target: claim.id,
+      details: `${getRandomDocumentType().pdf} uploaded`
+    });
+  }
+
+  // State transitions
+  for (let i = 0; i < Math.min(5, claims.length); i++) {
+    const claim = claims[i];
+    events.push({
+      id: `ae${id++}`,
+      timestamp: generateDateTime(rng, 2026, 2026),
+      actor: 'System',
+      action: 'State transition',
+      target: claim.id,
+      details: 'IDENTITY_REVIEW → EVIDENCE_REVIEW'
+    });
+  }
+
+  return events;
+}
+
+// Generate FAQs
+function generateFAQs() {
+  return [
+    {
+      id: 'faq1',
+      question: 'What is OwaFind?',
+      answer: 'OwaFind is a platform that helps you discover financial benefits that may belong to you — such as pension benefits, retirement funds, life insurance, funeral benefits, and more. We identify potential matches and guide you through the claims process.',
+      category: 'General'
+    },
+    {
+      id: 'faq2',
+      question: 'Does OwaFind hold my money?',
+      answer: 'No. OwaFind does not hold customer funds. We help you discover potential benefits and connect you with the institution that holds the benefit. The institution remains responsible for verification, approval, and payment.',
+      category: 'General'
+    },
+    {
+      id: 'faq3',
+      question: 'What does a potential match mean?',
+      answer: 'A potential match means our system has identified a benefit record that may belong to you based on your identity information. It does NOT mean you are legally entitled to the benefit. Final verification is done by the holding institution.',
+      category: 'Matching'
+    },
+    {
+      id: 'faq4',
+      question: 'How accurate is the matching?',
+      answer: 'Our matching system uses multiple signals — name, date of birth, national ID, and employment history — to assess confidence. Higher confidence scores indicate stronger matches, but all matches require institution verification.',
+      category: 'Matching'
+    },
+    {
+      id: 'faq5'
+      ,
+      question: 'What documents do I need to claim?',
+      answer: 'Typically you will need your ID document, proof of employment, and any relevant certificates (marriage, death, beneficiary). The specific documents depend on the benefit type and will be listed during the claim process.',
+      category: 'Claims'
+    },
+    {
+      id: 'faq6',
+      question: 'How long does a claim take?',
+      answer: 'Claim resolution times vary by institution and benefit type. On average, institutions resolve claims within 10–21 days. You can track your claim status in real time through your dashboard.',
+      category: 'Claims'
+    },
+    {
+      id: 'faq7',
+      question: 'Is my information safe?',
+      answer: 'OwaFind protects sensitive information. Your data is encrypted and used only for matching and claims purposes. We do not share your information with third parties without your consent.',
+      category: 'Privacy'
+    },
+    {
+      id: 'faq8',
+      question: 'Can I withdraw consent?',
+      answer: 'Yes. You can withdraw consent at any time from your Settings page under Privacy. Withdrawing consent will pause ongoing searches but will not affect claims already submitted.',
+      category: 'Privacy'
+    },
+    {
+      id: 'faq9',
+      question: 'What if my claim is rejected?',
+      answer: 'If your claim is rejected, the institution will provide a reason. You may be able to submit an appeal or provide additional information. Check your claim tracking page for details.',
+      category: 'Claims'
+    },
+    {
+      id: 'faq10',
+      question: 'Does OwaFind charge fees?',
+      answer: 'OwaFind is a free service for beneficiaries. There are no charges for searching, matching, or submitting claims.',
+      category: 'General'
+    }
+  ];
+}
+
+// Generate support tickets
+function generateSupportTickets(claims, rng) {
+  const tickets = [];
+  let id = 1;
+
+  // Only some claims generate support tickets
+  const ticketClaims = claims.filter(() => rng() > 0.8);
+
+  for (const claim of ticketClaims) {
+    tickets.push({
+      id: `OWF-${String(id).padStart(4, '0')}`,
+      subject: 'Question about document requirements',
+      category: 'Claims',
+      status: 'open',
+      createdAt: generateDateTime(rng, 2026, 2026),
+      updatedAt: generateDateTime(rng, 2026, 2026),
+      messages: [
+        {
+          author: claim.beneficiaryName,
+          message: 'I am not sure which documents I need for my claim. Can you help?',
+          timestamp: generateDateTime(rng, 2026, 2026)
+        },
+        {
+          author: 'OwaFind Support',
+          message: 'For your claim, you typically need your ID document, proof of employment, and any relevant employment letters. I can see you have already uploaded your ID and employment letter — you are on the right track!',
+          timestamp: generateDateTime(rng, 2026, 2026)
+        }
+      ]
+    });
+
+    id++;
+  }
+
+  return tickets;
+}
+
+// Format currency for display
+function formatCurrency(amount) {
+  return (amount / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+// Main generation function
+function generateSyntheticData() {
+  console.log('Starting synthetic data generation...');
+
+  // Create deterministic RNG
+  const rng = createRNG(CONFIG.SEED);
+
+  // Generate fictional beneficiaries
+  console.log(`Generating ${CONFIG.TOTAL_DISTINCT_BENEFICIARIES} fictional beneficiaries...`);
+  const beneficiaries = generateFictionalBeneficiaries(CONFIG.TOTAL_DISTINCT_BENEFICIARIES, rng);
+
+  // Generate institution data
+  console.log('Generating institution data...');
+  const institutions = generateInstitutions(rng);
+
+  // Generate benefit records
+  console.log('Generating benefit records...');
+  const benefitRecords = generateBenefitRecords(rng);
+
+  // Generate matches
+  console.log('Generating matches...');
+  const matches = generateMatches(beneficiaries, benefitRecords, rng);
+
+  // Generate claims
+  console.log('Generating claims...');
+  const claims = generateClaims(beneficiaries, benefitRecords, rng);
+
+  // Generate notifications
+  console.log('Generating notifications...');
+  const notifications = generateNotifications(beneficiaries, claims, rng);
+
+  // Generate risk alerts
+  console.log('Generating risk alerts...');
+  const riskAlerts = generateRiskAlerts(claims, rng);
+
+  // Generate audit events
+  console.log('Generating audit events...');
+  const auditEvents = generateAuditEvents(claims, rng);
+
+  // Generate FAQs
+  console.log('Generating FAQs...');
+  const faqs = generateFAQs();
+
+  // Generate support tickets
+  console.log('Generating support tickets...');
+  const supportTickets = generateSupportTickets(claims, rng);
+
+  // Calculate total unclaimed balance from benefit records with status 'unclaimed'
+  let totalUnclaimedBalance = 0;
+  for (const record of benefitRecords) {
+    if (record.status === 'unclaimed') {
+      totalUnclaimedBalance += record.approximateValue;
+    }
+  }
+
+  console.log(`Current unclaimed balance: N$ ${formatCurrency(totalUnclaimedBalance)}`);
+  console.log(`Target unclaimed balance: N$ ${formatCurrency(CONFIG.TOTAL_UNCLAIMED_BALANCE_CENTS)}`);
+
+  // Adjust benefit records to meet exact balance target
+  if (totalUnclaimedBalance !== CONFIG.TOTAL_UNCLAIMED_BALANCE_CENTS) {
+    console.log('Adjusting benefit records to meet exact balance constraint...');
+
+    const unclaimedRecords = benefitRecords.filter(record => record.status === 'unclaimed');
+    if (unclaimedRecords.length > 0) {
+      const adjustmentPerRecord = Math.floor((CONFIG.TOTAL_UNCLAIMED_BALANCE_CENTS - totalUnclaimedBalance) / unclaimedRecords.length);
+
+      for (const record of unclaimedRecords) {
+        record.approximateValue += adjustmentPerRecord;
+      }
+
+      // Handle any remainder by adjusting the first record
+      const remainder = (CONFIG.TOTAL_UNCLAIMED_BALANCE_CENTS - totalUnclaimedBalance) % unclaimedRecords.length;
+      if (remainder !== 0 && unclaimedRecords.length > 0) {
+        unclaimedRecords[0].approximateValue += remainder;
+      }
+
+      // Recalculate total
+      totalUnclaimedBalance = 0;
+      for (const record of benefitRecords) {
+        if (record.status === 'unclaimed') {
+          totalUnclaimedBalance += record.approximateValue;
+        }
+      }
+
+      console.log(`Adjusted unclaimed balance: N$ ${formatCurrency(totalUnclaimedBalance)}`);
+    }
+  }
+
+  // Final validation
+  console.log('\n=== GENERATION SUMMARY ===');
+  console.log(`Beneficiaries: ${beneficiaries.length}`);
+  console.log(`Institutions: ${institutions.length}`);
+  console.log(`Benefit Records: ${benefitRecords.length}`);
+  console.log(`Matches: ${matches.length}`);
+  console.log(`Claims: ${claims.length}`);
+  console.log(`Notifications: ${notifications.length}`);
+  console.log(`Risk Alerts: ${riskAlerts.length}`);
+  console.log(`Audit Events: ${auditEvents.length}`);
+  console.log(`Support Tickets: ${supportTickets.length}`);
+  console.log(`Total Unclaimed Balance: N$ ${formatCurrency(totalUnclaimedBalance)}`);
+  console.log(`Target Balance: N$ ${formatCurrency(CONFIG.TOTAL_UNCLAIMED_BALANCE_CENTS)}`);
+  console.log(`Balance Match: ${totalUnclaimedBalance === CONFIG.TOTAL_UNCLAIMED_BALANCE_CENTS ? '✓ PASS' : '✗ FAIL'}`);
+
+  // Return all generated data
+  return {
+    beneficiaries,
+    institutions,
+    benefitRecords,
+    matches,
+    claims,
+    notifications,
+    riskAlerts,
+    auditEvents,
+    faqs,
+    supportTickets
+  };
+}
+
+// Export the generation function
+export { generateSyntheticData };
+
+// If script is run directly, generate and save data
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const data = generateSyntheticData();
+
+  // Here you would typically save the data to files or a database
+  // For now, we'll just log that generation is complete
+  console.log('\nSynthetic data generation completed successfully!');
+}

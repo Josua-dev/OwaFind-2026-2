@@ -146,7 +146,7 @@ export function MatchDetailsPage() {
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
                 "This match shows identity alignment across multiple verification signals. The match is based on
-                data from the Pension Funds API and requires final verification by the holding institution."
+                fictional data in this local workspace and requires independent verification by the holding institution."
               </p>
               <Alert tone="info" className="mt-3 text-xs">
                 AI output is advisory and does not determine entitlement or approve claims.

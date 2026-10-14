@@ -16,12 +16,13 @@ const stages = [
 
 export function SearchingPage() {
   const navigate = useNavigate();
-  const { profile } = useApp();
+  const { profile, setSearchResults } = useApp();
   const [currentStage, setCurrentStage] = useState(0);
 
   useEffect(() => {
     const run = async () => {
-      await benefitService.searchBenefits(profile);
+      const matches = await benefitService.searchBenefits(profile);
+      setSearchResults(matches);
       const timers: ReturnType<typeof setTimeout>[] = [];
       for (let i = 0; i < stages.length; i++) {
         timers.push(setTimeout(() => setCurrentStage(i), i * 600));
@@ -31,7 +32,7 @@ export function SearchingPage() {
     };
     const timers = run();
     return () => { timers.then((ts) => ts.forEach(clearTimeout)); };
-  }, [navigate, profile]);
+  }, [navigate, profile, setSearchResults]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">

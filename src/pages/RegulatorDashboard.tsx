@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, FileText, CheckCircle2, Clock, TrendingUp, Building2, MapPin } from 'lucide-react';
+import { Target, FileText, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
 import { analyticsService, institutionService } from '@/services';
-import { useApp } from '@/context/AppContext';
 import { formatCurrencyShort } from '@/utils/format';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, AreaChart, Area, Cell } from 'recharts';
 
 const PIE_COLORS = ['#3d8378', '#54988e', '#84bcb3', '#fd7e14', '#f59e0b', '#ef4444'];
 
 export function RegulatorDashboard() {
-  const { profile } = useApp();
   const [stats, setStats] = useState({ totalBenefits: 0, potentialMatches: 0, verifiedMatches: 0, claims: 0, resolved: 0, avgResolutionDays: 0 });
   const [categoryData, setCategoryData] = useState<{ label: string; value: number; claims: number }[]>([]);
   const [institutionData, setInstitutionData] = useState<{ label: string; matches: number; claims: number; resolved: number }[]>([]);
@@ -46,7 +44,7 @@ export function RegulatorDashboard() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-slate-900">Regulator Overview</h1>
@@ -55,8 +53,7 @@ export function RegulatorDashboard() {
       </div>
 
       <Alert tone="info" title="About this dashboard">
-        This dashboard displays real-time statistics from the Pension Funds API.
-        Historical and trend data will accumulate over time as the platform processes claims and monitors institution activity.
+        All figures are calculated from fictional synthetic records in this local browser workspace. No institutions are connected.
       </Alert>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">

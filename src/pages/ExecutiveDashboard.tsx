@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Target, CheckCircle2, FileText, Building2, Clock, ArrowUp, ArrowDown } from 'lucide-react';
+import { TrendingUp, Target, CheckCircle2, FileText, Building2, Clock } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
-import { RecentActivityCard } from '@/components/shared/RecentActivity';
 import { analyticsService } from '@/services';
 import { formatCurrencyShort } from '@/utils/format';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend, LineChart, Line } from 'recharts';
@@ -43,12 +42,15 @@ export function ExecutiveDashboard() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-slate-900">Executive Overview</h1>
           <p className="text-slate-500 mt-1">Strategic KPIs and platform performance</p>
         </div>
+        <Alert tone="info" title="Local synthetic workspace">
+          All beneficiary, institution-account, claim, and historical activity records shown here are fictional and stored locally in this browser.
+        </Alert>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -185,8 +187,7 @@ export function ExecutiveDashboard() {
       </div>
 
       <Alert tone="info" title="About this dashboard">
-        This dashboard displays real-time statistics from the Pension Funds API.
-        Trend and historical data will accumulate over time as the platform processes claims and identifies matches.
+        All figures are calculated from fictional synthetic records in this local browser workspace. No institutions are connected.
       </Alert>
     </div>
   );
