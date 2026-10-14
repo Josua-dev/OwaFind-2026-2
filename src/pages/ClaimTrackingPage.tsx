@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Building2 } from 'lucide-react';
+import { ArrowLeft, FileText, Building2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
 import { ClaimTimeline, StateBadge } from '@/components/shared/Timeline';
+import { DocumentUploader } from '@/components/shared/DocumentUploader';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency, formatFileSize, formatDate, formatDateTime } from '@/utils/format';
 import type { Claim } from '@/types';
 
 export function ClaimTrackingPage() {
   const { id } = useParams<{ id: string }>();
-  const { claims, role } = useApp();
-  const claimsPath = role === 'institution' ? '/app/institution/claims' : '/app/claims';
+  const { claims } = useApp();
   const [claim, setClaim] = useState<Claim | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +28,7 @@ export function ClaimTrackingPage() {
     return (
       <div className="text-center py-16">
         <p className="text-slate-500">Claim not found.</p>
-        <Link to={claimsPath} className="text-primary-600 mt-2 inline-block">Back to claims</Link>
+        <Link to="/app/claims" className="text-primary-600 mt-2 inline-block">Back to claims</Link>
       </div>
     );
   }
@@ -37,7 +37,7 @@ export function ClaimTrackingPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <Link to={claimsPath} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
+      <Link to="/app/claims" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft className="w-4 h-4" />
         Back to claims
       </Link>
@@ -57,10 +57,9 @@ export function ClaimTrackingPage() {
         </div>
       </div>
 
-      <Alert tone="info" title={`Current status: ${claim.state.replace(/_/g, ' ')}`}>
-        {role === 'institution'
-          ? `This synthetic claim is currently in the ${claim.state.replace(/_/g, ' ')} stage of the local workspace workflow.`
-          : `Your submitted documents are currently being reviewed by ${claim.institutionName}. You will be notified when there is an update.`}
+      <Alert tone="info" title="Current status: Evidence Review">
+        Your submitted documents are currently being reviewed by {claim.institutionName}. You will be notified when
+        there is an update.
       </Alert>
 
       <div className="grid lg:grid-cols-3 gap-6">
