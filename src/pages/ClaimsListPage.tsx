@@ -3,7 +3,7 @@ import { FileText, Search, Plus, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StateBadge } from '@/components/shared/Timeline';
-import { EmptyState } from '@/components/ui/Feedback';
+import { EmptyState, Spinner } from '@/components/ui/Feedback';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency, formatDate } from '@/utils/format';
 
