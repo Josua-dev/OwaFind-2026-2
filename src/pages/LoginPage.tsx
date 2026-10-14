@@ -186,7 +186,7 @@ export function LoginPage() {
                           placeholder={rolePlaceholders[selectedRole]}
                         />
                         <Input
-                          label="Password"
+                          label="Password" 
                           type="password"
                           value={formData.password}
                           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
