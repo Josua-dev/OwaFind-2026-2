@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Building2 } from 'lucide-react';
+import { Target, ArrowRight, Building2, TrendingUp, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
-import { MatchStatusBadge, ConfidenceScore } from '@/components/shared/MatchVisuals';
+import { MatchStatusBadge, ConfidenceScore, SignalBadge } from '@/components/shared/MatchVisuals';
 import { matchService } from '@/services';
 import { formatCurrency, formatDate } from '@/utils/format';
 import type { MatchRecord } from '@/types';
@@ -55,7 +55,7 @@ export function MatchResultsPage() {
           <div>
             <p className="text-sm text-slate-500">Total potential value identified</p>
             <p className="text-3xl font-bold font-display text-primary-700 mt-1">{formatCurrency(totalValue)}</p>
-            <p className="text-xs text-slate-400 mt-1">Across {matches.length} potential {matches.length === 1 ? 'match' : 'matches'} • From local synthetic workspace</p>
+            <p className="text-xs text-slate-400 mt-1">Across {matches.length} potential {matches.length === 1 ? 'match' : 'matches'} • From Pension Funds API</p>
           </div>
           <div className="flex gap-3">
             {matches.filter((m) => m.status === 'green').length > 0 && (
