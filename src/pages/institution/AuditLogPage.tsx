@@ -3,7 +3,6 @@ import { ScrollText } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Search } from 'lucide-react';
-import { Alert } from '@/components/ui/Alert';
 import { auditService } from '@/services';
 import { formatDateTime } from '@/utils/format';
 import type { AuditEvent } from '@/types';
@@ -58,8 +57,8 @@ export function AuditLogPage() {
       </div>
 
       <Alert tone="info" title="Audit Log Data Source">
-        This page displays synthetic audit events generated for the local workspace. The log is fictional
-        and is not a real institutional audit trail.
+        This page displays audit events from the Pension Funds API.
+        Currently, audit event data is not available through the API endpoint.
       </Alert>
 
       <Input placeholder="Search audit events..." value={query} onChange={(e) => setQuery(e.target.value)} icon={<Search className="w-4 h-4" />} />
@@ -86,9 +85,9 @@ export function AuditLogPage() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-slate-500">No synthetic audit events are currently available in this workspace.</p>
+              <p className="text-slate-500">No audit events available from the Pension Funds API.</p>
               <p className="text-xs text-slate-400 mt-2">
-                Local audit events will appear as fictional claims, matches, and review actions are created.
+                Audit logging will be available when the API endpoint is implemented.
               </p>
             </div>
           )}

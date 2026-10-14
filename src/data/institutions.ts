@@ -187,6 +187,5 @@ export function toInstitutionRecords(): Institution[] {
     resolved: r.metrics.resolved,
     avgResolutionDays: r.metrics.avgResolutionDays,
     demo: true,
-    short: r.short,
   }));
 }

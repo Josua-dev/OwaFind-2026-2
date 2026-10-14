@@ -40,7 +40,7 @@ export function InstitutionClaimsQueue() {
   }, [activeInstitutionId]);
 
   const filtered = claims.filter((c) => {
-    if (statusFilter !== 'all' && c.state !== statusFilter) return false;
+    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
     if (query &&
       !c.id.toLowerCase().includes(query.toLowerCase()) &&
       !c.beneficiaryId.toLowerCase().includes(query.toLowerCase()) &&
@@ -95,14 +95,14 @@ export function InstitutionClaimsQueue() {
                       <td className="px-4 py-3 text-slate-600">{c.beneficiaryName || 'Unknown Beneficiary'}</td>
                       <td className="px-4 py-3 text-slate-600 hidden md:table-cell">{c.benefitType}</td>
                       <td className="px-4 py-3 text-slate-500 hidden lg:table-cell">{c.institutionName || 'Unknown Institution'}</td>
-                      <td className="px-4 py-3"><StateBadge state={c.state} /></td>
+                      <td className="px-4 py-3"><StateBadge state={c.status} /></td>
                       <td className="px-4 py-3 text-slate-700 hidden sm:table-cell">{formatCurrency(c.amount ?? 0)}</td>
                       <td className="px-4 py-3 text-slate-400 hidden lg:table-cell">{c.createdAt?.slice(0, 10) ?? 'Unknown Date'}</td>
                     </tr>
                   ))}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="px-4 py-3 text-center text-slate-400">
+                      <td colSpan="8" className="px-4 py-3 text-center text-slate-400">
                         No claims found for this institution.
                       </td>
                     </tr>

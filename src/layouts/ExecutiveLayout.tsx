@@ -110,7 +110,7 @@ export function ExecutiveLayout({ children }: { children: ReactNode }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-700 truncate">Executive User</p>
-              <p className="text-xs text-slate-400 truncate">Local workspace user</p>
+              <p className="text-xs text-slate-400 truncate">Demo User</p>
             </div>
           </div>
         </div>
@@ -193,7 +193,7 @@ export function ExecutiveLayout({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-2">
             <div className="hidden sm:block">
-              <span className="text-xs text-slate-400">Local synthetic workspace</span>
+              <span className="text-xs text-slate-400">Demo Environment</span>
             </div>
             <NotificationBell />
             <RoleSwitcher />

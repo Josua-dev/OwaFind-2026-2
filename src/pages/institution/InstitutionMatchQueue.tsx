@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
-import { Alert } from '@/components/ui/Alert';
 import { useApp } from '@/context/AppContext';
 import { matchService } from '@/services';
 import { cn } from '@/utils/format';
+import type { AuditEvent } from '@/types';
 
 export function InstitutionMatchQueue() {
   const { activeInstitutionId } = useApp();
@@ -125,7 +125,7 @@ export function InstitutionMatchQueue() {
                   ))}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="px-4 py-3 text-center text-slate-400">
+                      <td colSpan="8" className="px-4 py-3 text-center text-slate-400">
                         No matches found for this institution.
                       </td>
                     </tr>

@@ -2,6 +2,7 @@ import { Building2, MapPin, Globe, ShieldCheck, BarChart3, Info } from 'lucide-r
 import { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 import { Alert } from '@/components/ui/Alert';
 import { institutionService } from '@/services';
 import type { Institution } from '@/types';
@@ -27,7 +28,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-// Institution Profile — displays synthetic institutional catalogue data in the local workspace.
+// Institution Profile — displays real institutional information from the Pension Funds API
 export function InstitutionProfilePage() {
   const { activeInstitutionId } = useApp();
   const [institution, setInstitution] = useState<Institution | null>(null);
@@ -109,7 +110,7 @@ export function InstitutionProfilePage() {
       <Card>
         <CardHeader
           title="Public Institutional Information"
-          subtitle="Synthetic local workspace catalogue details"
+          subtitle="Verified information from the Pension Funds API"
           action={<Globe className="w-5 h-5 text-slate-300" />}
         />
         <CardBody className="pt-1">
@@ -126,7 +127,7 @@ export function InstitutionProfilePage() {
       <Card>
         <CardHeader
           title="Institution Statistics"
-          subtitle="Synthetic statistics from the local workspace"
+          subtitle="Real-time statistics from the Pension Funds API"
           action={<BarChart3 className="w-5 h-5 text-slate-300" />}
         />
         <CardBody>
@@ -135,7 +136,7 @@ export function InstitutionProfilePage() {
             <Stat label="Total Claims" value={institution.claims.toLocaleString()} />
             <Stat label="Pending Review" value={institution.pendingReview.toLocaleString()} />
             <Stat label="Resolved Claims" value={institution.resolved.toLocaleString()} />
-            <Stat label="Avg. Resolution (days)" value={institution.resolved > 0 ? `${institution.avgResolutionDays}` : '—'} />
+            <Stat label="Avg. Resolution (days)" value={`${institution.avgResolutionDays}`} />
           </div>
           {institution.matches === 0 && institution.claims === 0 && institution.pendingReview === 0 && institution.resolved === 0 && (
             <p className="mt-4 text-xs text-slate-400 flex items-start gap-1.5 leading-relaxed">

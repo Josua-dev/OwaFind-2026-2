@@ -53,14 +53,11 @@ export interface Claim {
   beneficiaryName: string;
   benefitType: BenefitType;
   institutionId: string;
-  institutionName: string;
   referenceNumber: string;
   state: ClaimState;
   potentialValue: number;
   submittedAt: string;
   updatedAt: string;
-  amount: number;
-  createdAt: string;
   documents: UploadedDocument[];
   timeline: ClaimTimelineEvent[];
   notes?: string;
@@ -115,7 +112,6 @@ export interface Institution {
   resolved: number;
   avgResolutionDays: number;
   demo: boolean;
-  short: string;
 }
 
 export interface BenefitRecord {
@@ -127,9 +123,6 @@ export interface BenefitRecord {
   approximateValue: number;
   region: string;
   status: 'active' | 'dormant' | 'unclaimed';
-  beneficiaryId?: string;
-  dateJoined?: string;
-  dateExited?: string | null;
 }
 
 export interface EmploymentEntry {

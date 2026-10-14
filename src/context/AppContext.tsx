@@ -1,11 +1,21 @@
-/* eslint-disable react-refresh/only-export-components */
+/**
+ * Application-wide context.
+ *
+ * State is divided into three categories:
+ *  - UI preferences (role, activeInstitutionId, sidebar/theme) — stored
+ *    client-side as they are not server-owned business data.
+ *  - User-entered search input (profile) — kept client-side because the
+ *    backend only uses it as search criteria; there is no user-account API.
+ *  - Server-owned records (beneficiary search results, claims, documents,
+ *    tickets) — retrieved from the Pension Funds API. These are NOT
+ *    persisted in localStorage and cannot be restored from it.
+ *
+ * If the app reloads, UI preferences are preserved but live records are
+ * re-fetched from the API on next navigation.
+ */
+
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  loadLocalWorkspaceState,
-  resetLocalWorkspaceState,
-  saveLocalWorkspaceState,
-} from '@/services/workspaceRepository';
 import type {
   Role,
   BeneficiaryProfile,
@@ -13,7 +23,6 @@ import type {
   UploadedDocument,
   SupportTicket,
   MatchRecord,
-  Notification as AppNotification,
 } from '@/types';
 
 interface AppContextValue {
@@ -28,7 +37,7 @@ interface AppContextValue {
   profile: BeneficiaryProfile;
   setProfile: (profile: BeneficiaryProfile) => void;
 
-  notifications: AppNotification[];
+  notifications: unknown[]; // no notification API endpoint
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   unreadCount: number;
@@ -36,7 +45,6 @@ interface AppContextValue {
   claims: Claim[];
   addClaim: (claim: Claim) => void;
   updateClaim: (claim: Claim) => void;
-  setClaims: (claims: Claim[]) => void;
 
   documents: UploadedDocument[];
   addDocument: (doc: UploadedDocument) => void;
@@ -46,18 +54,20 @@ interface AppContextValue {
   tickets: SupportTicket[];
   addTicket: (t: SupportTicket) => void;
 
-  searchResults: MatchRecord[];
+  searchResults: MatchRecord[]; // results of the last beneficiary search (from API)
   clearSearchResults: () => void;
 
   consentGiven: boolean;
   setConsentGiven: (v: boolean) => void;
 
   resetDemo: () => void;
-  resetWorkspace: () => void;
   logout: () => void;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
+
+// Keep only UI preferences in localStorage; business records are never
+// restored from the browser store.
 const UI_PERSIST_KEY = 'owafind-ui-prefs';
 
 const DEFAULT_PROFILE: BeneficiaryProfile = {
@@ -85,10 +95,11 @@ interface UIPrefs {
 function loadUIPrefs(): Partial<UIPrefs> {
   try {
     const raw = localStorage.getItem(UI_PERSIST_KEY);
-    return raw ? (JSON.parse(raw) as Partial<UIPrefs>) : {};
+    if (raw) return JSON.parse(raw);
   } catch {
-    return {};
+    // ignore
   }
+  return {};
 }
 
 function saveUIPrefs(prefs: UIPrefs) {
@@ -123,35 +134,24 @@ export function roleHomePath(role: Role): string {
 export function AppProvider({ children }: { children: ReactNode }) {
   const persisted = loadUIPrefs();
   const navigate = useNavigate();
-  const stored = loadLocalWorkspaceState();
 
   const [role, setRole] = useState<Role>(persisted.role || 'beneficiary');
-  const [activeInstitutionId, setActiveInstitutionId] = useState<string>(persisted.activeInstitutionId || 'gipf');
-  const [profile, setProfile] = useState<BeneficiaryProfile>(stored.profile || DEFAULT_PROFILE);
-  const [searchResults, setSearchResults] = useState<MatchRecord[]>(stored.searchResults ?? []);
-  const [notifications, setNotifications] = useState<AppNotification[]>(stored.notifications ?? []);
-  const [claims, setClaims] = useState<Claim[]>(stored.claims ?? []);
-  const [documents, setDocuments] = useState<UploadedDocument[]>(stored.documents ?? []);
-  const [tickets, setTickets] = useState<SupportTicket[]>(stored.tickets ?? []);
-  const [consentGiven, setConsentGiven] = useState<boolean>(persisted.consentGiven ?? stored.consentGiven ?? false);
+  const [activeInstitutionId, setActiveInstitutionId] = useState<string>(
+    persisted.activeInstitutionId || 'gipf'
+  );
+  const [profile, setProfile] = useState<BeneficiaryProfile>(DEFAULT_PROFILE);
+  const [searchResults, setSearchResults] = useState<MatchRecord[]>([]);
+  const [notifications, setNotifications] = useState<unknown[]>([]);
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [consentGiven, setConsentGiven] = useState<boolean>(persisted.consentGiven ?? false);
   const [switching, setSwitching] = useState(false);
   const switchTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     saveUIPrefs({ role, activeInstitutionId, consentGiven });
   }, [role, activeInstitutionId, consentGiven]);
-
-  useEffect(() => {
-    saveLocalWorkspaceState({
-      profile,
-      searchResults,
-      notifications,
-      claims,
-      documents,
-      tickets,
-      consentGiven,
-    });
-  }, [profile, searchResults, notifications, claims, documents, tickets, consentGiven]);
 
   useEffect(() => () => window.clearTimeout(switchTimer.current), []);
 
@@ -165,15 +165,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     switchTimer.current = window.setTimeout(() => setSwitching(false), 350);
   };
 
-  const markNotificationRead = (id: string): void => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markNotificationRead = (_id: string): void => {
+    setNotifications((prev) => prev.map((n) => n));
   };
 
   const markAllNotificationsRead = (): void => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifications([]);
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => n !== null).length;
 
   const addClaim = (claim: Claim): void => {
     setClaims((prev) => [claim, ...prev]);
@@ -203,26 +203,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSearchResults([]);
   };
 
-  const resetWorkspace = (): void => {
-    const nextState = resetLocalWorkspaceState();
+  const resetDemo = (): void => {
     localStorage.removeItem(UI_PERSIST_KEY);
     setRole('beneficiary');
     setActiveInstitutionId('gipf');
-    setProfile(nextState.profile || DEFAULT_PROFILE);
-    setSearchResults(nextState.searchResults || []);
-    setNotifications(nextState.notifications || []);
-    setClaims(nextState.claims || []);
-    setDocuments(nextState.documents || []);
-    setTickets(nextState.tickets || []);
-    setConsentGiven(nextState.consentGiven ?? false);
-  };
-
-  const resetDemo = (): void => {
-    resetWorkspace();
+    setProfile(DEFAULT_PROFILE);
+    setSearchResults([]);
+    setNotifications([]);
+    setClaims([]);
+    setDocuments([]);
+    setTickets([]);
+    setConsentGiven(false);
   };
 
   const logout = (): void => {
-    resetWorkspace();
+    resetDemo();
     navigate('/login', { replace: true });
   };
 
@@ -244,7 +239,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         claims,
         addClaim,
         updateClaim,
-        setClaims,
         documents,
         addDocument,
         updateDocument,
@@ -256,7 +250,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         consentGiven,
         setConsentGiven,
         resetDemo,
-        resetWorkspace,
         logout,
       }}
     >

@@ -9,29 +9,8 @@ import { DocumentUploader } from '@/components/shared/DocumentUploader';
 import { matchService, claimService } from '@/services';
 import { useApp } from '@/context/AppContext';
 import { cn, formatCurrency } from '@/utils/format';
+import { SUPPORTED_FIRMS } from '@/services/pensionApi';
 import type { MatchRecord, Claim } from '@/types';
-
-const LOCAL_SUPPORTED_FIRMS = [
-  'gipf',
-  'namcor-pension',
-  'nampower-provident',
-  'namwater-retirement',
-  'nbc-retirement',
-  'rossing-pension',
-  'namport-retirement',
-  'bon-provident',
-  'mtc-pension',
-  'standard-bank-pension',
-  'namib-mills-pension',
-  'transnamib-retirement',
-  'capricorn-retirement',
-  'pupkewitz-pension',
-  'nbw-pension',
-  'universities-retirement',
-  'nhe-retirement',
-  'sanlam-namibia',
-  'old-mutual-namibia',
-] as const;
 
 const claimSteps = [
   { number: 1, label: 'Review', icon: User },
@@ -76,8 +55,8 @@ export function NewClaimPage() {
   const handleSubmit = async () => {
     if (!draftClaim) return;
 
-    // Validate firm identifier before submission.
-    if (!LOCAL_SUPPORTED_FIRMS.includes(draftClaim.institutionId as (typeof LOCAL_SUPPORTED_FIRMS)[number])) {
+    // Validate firm identifier before submission
+    if (!SUPPORTED_FIRMS.includes(draftClaim.institutionId)) {
       setSubmitError(`Invalid institution: ${draftClaim.institutionId}`);
       return;
     }
@@ -199,7 +178,7 @@ export function NewClaimPage() {
                 {!identityVerified ? (
                   <>
                     <Alert tone="info" title="Identity verification">
-                      We'll verify your identity using your national ID and personal information against the local synthetic workspace records.
+                      We'll verify your identity using your national ID and personal information against the Pension Funds API records.
                     </Alert>
                     <div className="bg-slate-50 rounded-xl p-5 space-y-3">
                       <div className="flex items-center gap-3">
@@ -259,7 +238,7 @@ export function NewClaimPage() {
               <CardHeader title="Review & Submit" subtitle="Please review your claim before submitting." />
               <CardBody className="space-y-4">
                 {submitError && (
-                  <Alert tone="error" title="Submit Error">
+                  <Alert tone="destructive" title="Submit Error">
                     {submitError}
                   </Alert>
                 )}

@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, ShieldAlert, Copy, FileWarning, Users, Bug } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
+import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Alert } from '@/components/ui/Alert';
-import { RiskAlertDetails } from '@/components/shared/RiskAlertDetails';
 import { riskService } from '@/services';
 import { timeAgo } from '@/utils/format';
 import type { RiskAlert } from '@/types';
@@ -21,7 +20,6 @@ const severityConfig: Record<RiskAlert['severity'], 'default' | 'success' | 'war
 
 export function RiskPanel() {
   const [alerts, setAlerts] = useState<RiskAlert[]>([]);
-  const [selectedAlert, setSelectedAlert] = useState<RiskAlert | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,8 +63,8 @@ export function RiskPanel() {
       </div>
 
       <Alert tone="info" title="Risk Alerts Data Source">
-        This panel displays synthetic risk alerts generated in the local workspace. It is not connected
-        to any live institution or external API feed.
+        This panel displays risk alerts from the Pension Funds API.
+        Currently, risk alert data is not available through the API endpoint.
       </Alert>
 
       <div className="grid grid-cols-3 gap-4">
@@ -78,14 +76,7 @@ export function RiskPanel() {
       {alerts.length > 0 ? (
         <div className="space-y-3">
           {alerts.map((alert) => (
-            <button
-              key={alert.id}
-              type="button"
-              onClick={() => setSelectedAlert(alert)}
-              className="block w-full rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              aria-label={`View risk alert ${alert.id}`}
-            >
-            <Card className="p-5 transition-colors hover:border-primary-300">
+            <Card key={alert.id} className="p-5">
               <div className="flex items-start gap-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                   alert.severity === 'high' ? 'bg-error-50 text-error-600' :
@@ -114,20 +105,18 @@ export function RiskPanel() {
                 </div>
             </div>
             </Card>
-                </button>
           ))}
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-slate-500">No synthetic risk alerts are currently active in this workspace.</p>
+          <p className="text-slate-500">No risk alerts available from the Pension Funds API.</p>
           {alerts.length === 0 && (
             <p className="text-xs text-slate-400 mt-2">
-              This local workspace may generate alerts as fictional cases and records are reviewed.
+              Risk alert monitoring will be available when the API endpoint is implemented.
             </p>
           )}
         </div>
       )}
-      <RiskAlertDetails alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
     </div>
   );
 }

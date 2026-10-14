@@ -7,13 +7,25 @@
 import type {
   FirmMember,
   PensionHolding,
+  ClientHolding,
   ClaimableResponse,
+  MultiFirmHolding,
+  MultiFirmResponse,
   DormantResults,
   PensionFirm,
-  MultiFirmResponse,
   ClaimRecord,
 } from './pensionApi';
-import type { MatchRecord, BenefitRecord, Institution, Claim } from '@/types';
+import type {
+  BeneficiaryProfile,
+  MatchRecord,
+  BenefitRecord,
+  Institution,
+  RiskAlert,
+  AuditEvent,
+  Notification,
+  SupportTicket,
+  Claim,
+} from '@/types';
 
 // ---------------------------------------------------------------------------
 // Static institution metadata (descriptive only — NOT live from the API)
@@ -65,7 +77,6 @@ export function mapFirmToInstitution(firm: PensionFirm): Institution {
     resolved: 0,
     avgResolutionDays: 0,
     demo: false,
-    short: meta.label,
   };
 }
 
@@ -171,14 +182,13 @@ export function mapSearchByIdResults(results: {
   return results.results.map((member) => {
     const balance = member.balance_nad ?? 0;
     const confidence = member.date_of_birth ? 90 : 60;
-    const institutionName = member.id_number || member.ref_number || 'Institution Record';
     return {
-      id: `id-${member.id_number}-${member.ref_number ?? Math.random().toString(36).slice(2, 8)}`,
+      id: `id-${member.firm}-${member.ref_number ?? Math.random().toString(36).slice(2, 8)}`,
       beneficiaryId: member.id_number,
       beneficiaryName: `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim(),
       benefitType: 'Pension',
-      institutionId: member.id_number,
-      institutionName,
+      institutionId: member.firm,
+      institutionName: member.label ?? member.firm,
       institutionReference: member.ref_number,
       potentialValue: balance,
       confidence,
@@ -196,10 +206,10 @@ export function mapSearchByIdResults(results: {
 
 export function mapDormantResults(results: DormantResults): BenefitRecord[] {
   return results.results.map((member) => ({
-    id: `dormant-${member.id_number ?? ''}-${member.ref_number ?? ''}`,
+    id: `dormant-${member.firm}-${member.ref_number ?? ''}`,
     type: 'Pension',
-    institutionId: member.id_number,
-    institutionName: member.id_number || member.ref_number || 'Institution Record',
+    institutionId: member.firm,
+    institutionName: member.label ?? member.firm,
     reference: member.ref_number ?? '',
     approximateValue: member.balance_nad ?? 0,
     region: 'Namibia',
@@ -244,23 +254,18 @@ export function mapMultiFirmResults(response: MultiFirmResponse): MatchRecord[] 
 // ---------------------------------------------------------------------------
 
 export function mapClaimRecord(claim: ClaimRecord, match: MatchRecord | null = null): Claim {
-  const amount = claim.amount_claimed ?? 0;
-  const benefitType = match?.benefitType ?? 'Pension';
   return {
     id: claim.id,
     matchId: match?.id ?? '',
     beneficiaryId: claim.id_number,
     beneficiaryName: match?.beneficiaryName ?? '',
-    benefitType,
+    benefitType: 'Pension',
     institutionId: claim.firm,
-    institutionName: match?.institutionName ?? claim.firm,
     referenceNumber: claim.ref_number,
     state: 'SUBMITTED',
-    potentialValue: amount,
+    potentialValue: claim.amount_claimed ?? 0,
     submittedAt: claim.created_at,
     updatedAt: claim.created_at,
-    amount,
-    createdAt: claim.created_at,
     documents: [],
     timeline: [
       {
