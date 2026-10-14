@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, FileCheck, UserCheck, Target, FileText, CheckCircle2 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { benefitService } from '@/services';
