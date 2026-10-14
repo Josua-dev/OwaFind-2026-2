@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, FileText, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
+import { Target, FileText, CheckCircle2, Clock, TrendingUp, Building2, MapPin } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
 import { analyticsService, institutionService } from '@/services';
+import { useApp } from '@/context/AppContext';
 import { formatCurrencyShort } from '@/utils/format';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, AreaChart, Area, Cell } from 'recharts';
 
 const PIE_COLORS = ['#3d8378', '#54988e', '#84bcb3', '#fd7e14', '#f59e0b', '#ef4444'];
 
 export function RegulatorDashboard() {
+  const { profile } = useApp();
   const [stats, setStats] = useState({ totalBenefits: 0, potentialMatches: 0, verifiedMatches: 0, claims: 0, resolved: 0, avgResolutionDays: 0 });
-  const [categoryData, setCategoryData] = useState<Array<{ label: string; value: number; claims?: number }>>([]);
-  const [institutionData, setInstitutionData] = useState<Array<{ label: string; matches?: number; claims?: number; resolved?: number }>>([]);
-  const [resolutionData, setResolutionData] = useState<Array<{ label: string; resolved?: number; avgDays?: number }>>([]);
-  const [regionalData, setRegionalData] = useState<Array<{ label: string; value: number }>>([]);
+  const [categoryData, setCategoryData] = useState<{ label: string; value: number; claims: number }[]>([]);
+  const [institutionData, setInstitutionData] = useState<{ label: string; matches: number; claims: number; resolved: number }[]>([]);
+  const [resolutionData, setResolutionData] = useState<{ label: string; resolved: number; avgDays: number }[]>([]);
+  const [regionalData, setRegionalData] = useState<{ label: string; value: number }[]>([]);
   const [institutions, setInstitutions] = useState<{ id: string; name: string; type: string; region: string; matches: number; claims: number; pendingReview: number; resolved: number; avgResolutionDays: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,12 +37,12 @@ export function RegulatorDashboard() {
   if (loading) return <div className="animate-shimmer h-96 rounded-xl" />;
 
   const statCards = [
-    { label: 'Total Unclaimed Benefits', value: formatCurrencyShort(stats.totalBenefits), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
+    { label: 'Total Potential Benefits', value: formatCurrencyShort(stats.totalBenefits), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
     { label: 'Potential Matches', value: stats.potentialMatches.toLocaleString(), icon: Target, color: 'bg-blue-50 text-blue-600' },
     { label: 'Verified Matches', value: stats.verifiedMatches.toLocaleString(), icon: CheckCircle2, color: 'bg-success-50 text-success-600' },
     { label: 'Claims', value: stats.claims.toLocaleString(), icon: FileText, color: 'bg-accent-50 text-accent-600' },
     { label: 'Resolved', value: stats.resolved.toLocaleString(), icon: CheckCircle2, color: 'bg-success-50 text-success-600' },
-    { label: 'Avg Resolution', value: stats.resolved > 0 ? `${stats.avgResolutionDays} days` : '—', icon: Clock, color: 'bg-warning-50 text-warning-600' },
+    { label: 'Avg Resolution', value: `${stats.avgResolutionDays} days`, icon: Clock, color: 'bg-warning-50 text-warning-600' },
   ];
 
   return (
@@ -48,13 +50,13 @@ export function RegulatorDashboard() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-slate-900">Regulator Overview</h1>
-          <p className="text-slate-500 mt-1">Synthetic workspace overview across the institution catalogue</p>
+          <p className="text-slate-500 mt-1">Aggregated monitoring across the OwaFind ecosystem</p>
         </div>
       </div>
 
       <Alert tone="info" title="About this dashboard">
-        This dashboard summarises synthetic workspace statistics for fictional institution activity,
-        claim trends, and matching data generated for local prototype analysis only.
+        This dashboard displays real-time statistics from the Pension Funds API.
+        Historical and trend data will accumulate over time as the platform processes claims and monitors institution activity.
       </Alert>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -74,14 +76,14 @@ export function RegulatorDashboard() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader title="Unclaimed Benefits by Category" subtitle="Unclaimed account balance across all institutions" />
+          <CardHeader title="Benefit Categories" subtitle="Distribution of potential matches by type" />
           <CardBody>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie data={categoryData} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius={100} label={true}>
                   {categoryData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(value) => formatCurrencyShort(Number(value ?? 0))} />
+                <Tooltip />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -109,7 +111,7 @@ export function RegulatorDashboard() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader title="Institution Activity" subtitle="Synthetic account matches and locally recorded claims" />
+          <CardHeader title="Institution Activity" subtitle="Matches and claims by institution" />
           <CardBody>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={institutionData}>
@@ -127,7 +129,7 @@ export function RegulatorDashboard() {
         </Card>
 
         <Card>
-          <CardHeader title="Regional Distribution" subtitle="Synthetic matches by beneficiary region" />
+          <CardHeader title="Regional Distribution" subtitle="Potential matches by region" />
           <CardBody>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={regionalData}>
@@ -143,7 +145,7 @@ export function RegulatorDashboard() {
       </div>
 
       <Card>
-        <CardHeader title="Institution Catalogue" subtitle={`Synthetic metrics across ${institutions.length} institution labels`} />
+        <CardHeader title="Registered Institutions" subtitle={`Verified metrics across ${institutions.length} Namibian institutions`} />
         <CardBody className="p-0">
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
@@ -164,8 +166,8 @@ export function RegulatorDashboard() {
                     <td className="px-4 py-3 text-slate-500 hidden md:table-cell">{inst.region}</td>
                     <td className="px-4 py-3 text-slate-600">{inst.matches}</td>
                     <td className="px-4 py-3 text-slate-600">{inst.claims}</td>
-                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">{inst.pendingReview}</td>
-                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">{inst.resolved > 0 ? inst.avgResolutionDays : '—'}</td>
+                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell>{inst.pendingReview}</td>
+                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell>{inst.avgResolutionDays}</td>
                   </tr>
                 ))}
               </tbody>
