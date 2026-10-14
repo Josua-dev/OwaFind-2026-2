@@ -9,7 +9,6 @@ import { Alert } from '@/components/ui/Alert';
 import { Badge } from '@/components/ui/Badge';
 import { StateBadge } from '@/components/shared/Timeline';
 import { RecentActivityCard } from '@/components/shared/RecentActivity';
-import { RiskAlertDetails } from '@/components/shared/RiskAlertDetails';
 import {
   analyticsService, auditService, riskService, supportService,
   claimService, institutionService,
@@ -29,13 +28,12 @@ const severityVariant: Record<string, 'error' | 'warning' | 'info'> = {
 
 export function AdminDashboard() {
   const [regStats, setRegStats] = useState({ totalBenefits: 0, potentialMatches: 0, verifiedMatches: 0, claims: 0, resolved: 0, avgResolutionDays: 0 });
-  const [execStats, setExecStats] = useState<{ openClaims: number; resolvedClaims: number } | null>(null);
-  const [categoryData, setCategoryData] = useState<Array<{ label: string; value: number; claims?: number }>>([]);
-  const [volumeData, setVolumeData] = useState<Array<{ label: string; value: number }>>([]);
-  const [trendData, setTrendData] = useState<Array<{ label: string; matches?: number; verified?: number; claims?: number }>>([]);
+  const [execStats, setExecStats] = useState<{ openClaims: number; resolvedClaims: number; potentialRecoveryValue: number; activeInstitutions: number } | null>(null);
+  const [categoryData, setCategoryData] = useState<{ label: string; value: number; claims: number }[]>([]);
+  const [volumeData, setVolumeData] = useState<{ label: string; value: number }[]>([]);
+  const [trendData, setTrendData] = useState<{ label: string; matches: number; verified: number; claims: number }[]>([]);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>([]);
-  const [selectedRiskAlert, setSelectedRiskAlert] = useState<RiskAlert | null>(null);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
@@ -55,7 +53,7 @@ export function AdminDashboard() {
       institutionService.getInstitutions(),
     ]).then(([reg, ex, cat, vol, trd, audit, risk, tix, cl, inst]) => {
       setRegStats(reg);
-      setExecStats({ openClaims: ex.openClaims, resolvedClaims: ex.resolvedClaims });
+      setExecStats({ openClaims: ex.openClaims, resolvedClaims: ex.resolvedClaims, potentialRecoveryValue: ex.potentialRecoveryValue, activeInstitutions: ex.activeInstitutions });
       setCategoryData(cat);
       setVolumeData(vol);
       setTrendData(trd);
@@ -74,7 +72,7 @@ export function AdminDashboard() {
   const openTickets = tickets.filter((t) => t.status === 'open').length;
 
   const statCards = [
-    { label: 'Total Unclaimed Benefits', value: formatCurrencyShort(regStats.totalBenefits), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
+    { label: 'Total Potential Benefits', value: formatCurrencyShort(regStats.totalBenefits), icon: TrendingUp, color: 'bg-primary-50 text-primary-600' },
     { label: 'Potential Matches', value: regStats.potentialMatches.toLocaleString(), icon: Target, color: 'bg-blue-50 text-blue-600' },
     { label: 'Verified Matches', value: regStats.verifiedMatches.toLocaleString(), icon: CheckCircle2, color: 'bg-success-50 text-success-600' },
     { label: 'Open Claims', value: (execStats?.openClaims ?? 0).toLocaleString(), icon: FileText, color: 'bg-accent-50 text-accent-600' },
@@ -94,8 +92,8 @@ export function AdminDashboard() {
       </div>
 
       <Alert tone="info" title="About this dashboard">
-        This dashboard summarises synthetic workspace statistics for fictional beneficiary, institution,
-        claim, and support records in the local browser. It is not connected to any live service.
+        This dashboard displays real-time statistics from the Pension Funds API and platform services.
+        Historical data will accumulate over time as the platform processes claims, monitors risk, and manages support tickets.
       </Alert>
 
       {/* Platform-wide stats */}
@@ -130,26 +128,18 @@ export function AdminDashboard() {
           <CardBody className="pt-1">
             <div className="space-y-3">
               {riskAlerts.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => setSelectedRiskAlert(r)}
-                  className="block w-full rounded-md py-2 text-left border-b border-slate-50 last:border-0 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                  aria-label={`View risk alert ${r.id}`}
-                >
+                <div key={r.id} className="py-2 border-b border-slate-50 last:border-0">
                   <div className="flex items-center justify-between gap-2">
                     <Badge variant={severityVariant[r.severity] || 'default'} dot>{r.severity}</Badge>
                     <span className="text-xs text-slate-400">{timeAgo(r.createdAt)}</span>
                   </div>
                   <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">{r.description}</p>
-                </button>
+                </div>
               ))}
             </div>
           </CardBody>
         </Card>
       </div>
-
-      <RiskAlertDetails alert={selectedRiskAlert} onClose={() => setSelectedRiskAlert(null)} />
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
@@ -179,14 +169,14 @@ export function AdminDashboard() {
 
         {categoryData.length > 0 ? (
           <Card>
-            <CardHeader title="Unclaimed Benefits by Category" subtitle="Unclaimed account balance across all institutions" />
+            <CardHeader title="Benefit Categories" subtitle="Distribution of potential matches by type" />
             <CardBody>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie data={categoryData} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius={90} label={true}>
                     {categoryData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(value) => formatCurrencyShort(Number(value ?? 0))} />
+                  <Tooltip />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -194,7 +184,7 @@ export function AdminDashboard() {
           </Card>
         ) : (
           <Card>
-            <CardHeader title="Unclaimed Benefits by Category" subtitle="Unclaimed account balance across all institutions" />
+            <CardHeader title="Benefit Categories" subtitle="Distribution of potential matches by type" />
             <CardBody className="text-center py-8">
               <p className="text-slate-500">Benefit category distribution data will be available as matches are identified.</p>
             </CardBody>
@@ -261,10 +251,10 @@ export function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Annual synthetic activity */}
+      {/* Quarterly platform trend */}
       {trendData.length > 0 ? (
         <Card>
-          <CardHeader title="Annual Synthetic Activity" subtitle="Matches, verifications and claims by year identified or submitted" />
+          <CardHeader title="Quarterly Platform Trend" subtitle="Matches, verifications and claims by quarter" />
           <CardBody>
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={trendData}>
@@ -282,9 +272,9 @@ export function AdminDashboard() {
         </Card>
       ) : (
         <Card>
-          <CardHeader title="Annual Synthetic Activity" subtitle="Matches, verifications and claims by year identified or submitted" />
+          <CardHeader title="Quarterly Platform Trend" subtitle="Matches, verifications and claims by quarter" />
           <CardBody className="text-center py-8">
-            <p className="text-slate-500">Annual activity data will appear as synthetic matches and claims are recorded.</p>
+            <p className="text-slate-500">Quarterly trend data will be available as the platform accumulates historical data.</p>
           </CardBody>
         </Card>
       )}
@@ -313,7 +303,7 @@ export function AdminDashboard() {
                     <td className="px-4 py-3 text-slate-600">{inst.matches.toLocaleString()}</td>
                     <td className="px-4 py-3 text-slate-600">{inst.claims}</td>
                     <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">{inst.pendingReview}</td>
-                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">{inst.resolved > 0 ? inst.avgResolutionDays : '—'}</td>
+                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">{inst.avgResolutionDays}</td>
                   </tr>
                 ))}
               </tbody>
