@@ -15,9 +15,10 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/Button';
-import { Input, Checkbox } from '@/components/ui/Input';
+import { Input, Select, Checkbox } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
 import { useApp } from '@/context/AppContext';
+import { benefitService } from '@/services';
 import { cn } from '@/utils/format';
 import type { BenefitType, EmploymentEntry } from '@/types';
 
