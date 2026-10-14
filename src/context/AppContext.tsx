@@ -215,7 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = (): void => {
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (
