@@ -5,7 +5,7 @@ import { AppProvider, useApp, roleHomePath } from '@/context/AppContext';
 import { Spinner } from '@/components/ui/Feedback';
 import { BeneficiaryLayout } from '@/layouts/BeneficiaryLayout';
 import { InstitutionLayout } from '@/layouts/InstitutionLayout';
-import { RegulatorLayout } from '@/layouts/RegulatorLayout';
+import { RegulatorLayout } from '@/layouts/RegulatorLayout'; 
 import { ExecutiveLayout } from '@/layouts/ExecutiveLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import type { Role } from '@/types';
