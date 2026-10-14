@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Building2, Calendar, MapPin, ArrowRight, Brain } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, MapPin, ArrowRight, Info, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
@@ -145,8 +145,8 @@ export function MatchDetailsPage() {
                 </div>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                "This match shows identity alignment across multiple synthetic verification signals. It reflects
-                local workspace records and is for prototype review only; it does not represent a live institution decision."
+                "This match shows identity alignment across multiple verification signals. The match is based on
+                data from the Pension Funds API and requires final verification by the holding institution."
               </p>
               <Alert tone="info" className="mt-3 text-xs">
                 AI output is advisory and does not determine entitlement or approve claims.
