@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -6,34 +6,36 @@ import {
   FileText,
   FolderOpen,
   Bell,
-  Search,
-  TrendingUp,
   ArrowRight,
+  TrendingUp,
+  CheckCircle2,
   Clock,
+  Search,
   User,
 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { Progress } from '@/components/ui/Feedback';
 import { StateBadge } from '@/components/shared/Timeline';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency, formatCurrencyShort, timeAgo } from '@/utils/format';
 import { benefitService, claimService } from '@/services';
+import { cn } from '@/utils/format';
 
 export function BeneficiaryDashboard() {
   const { profile, claims, notifications, searchResults, setClaims } = useApp();
   const activeClaims = claims.filter((c) => !['CLOSED', 'APPROVED', 'REJECTED'].includes(c.state));
-  const unreadNotifications = notifications.filter((n) => !n.read);
+  const unreadNotifications = notifications.filter((n) => n !== null && !n.read);
   const totalDocs = claims.reduce((sum, c) => sum + c.documents.length, 0);
   const potentialBenefits = searchResults.length;
   const totalValue = searchResults.reduce((sum, m) => sum + m.potentialValue, 0);
 
   useEffect(() => {
     if (profile.nationalId) {
-      void benefitService.searchBenefits(profile);
+      benefitService.searchBenefits(profile);
     }
-    void claimService.getClaims().then((c) => setClaims(c));
-  }, [profile, setClaims]);
+    claimService.getClaims().then((c) => setClaims(c));
+  }, [profile.nationalId]);
 
   const stats = [
     { label: 'Potential Benefits', value: potentialBenefits.toString(), icon: Target, color: 'bg-primary-50 text-primary-600', link: '/app/matches' },
