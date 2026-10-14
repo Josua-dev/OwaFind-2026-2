@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/Feedback';
 import { supportService } from '@/services';
 import { useApp } from '@/context/AppContext';
-import { formatDate } from '@/utils/format';
+import { formatDate, cn } from '@/utils/format';
 import type { FAQ, SupportTicket } from '@/types';
 
 export function SupportPage() {
