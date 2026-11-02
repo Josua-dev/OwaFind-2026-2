@@ -10,6 +10,7 @@ import type {
   FAQ,
   SupportTicket,
 } from '@/types';
+import { SUCCESS_FEE_PERCENTAGE, calculateSuccessFee } from '@/utils/constants';
 import { toInstitutionRecords } from './institutions';
 
 // All personal data below is FICTIONAL (demo user only). Institution names are real
@@ -17,13 +18,13 @@ import { toInstitutionRecords } from './institutions';
 // demonstration data — OwaFind is not integrated with any institution.
 
 export const seedProfile: BeneficiaryProfile = {
-  firstName: 'Josua',
-  lastName: 'Uuyuni',
+  firstName: 'Maria',
+  lastName: 'Doe',
   dateOfBirth: '1975-03-14',
   nationalId: '75031402048',
   previousName: '',
   phone: '+264 81 234 5678',
-  email: 'josua.uuyuni@example.com',
+  email: 'maria.doe@example.com',
   region: 'Windhoek',
   employmentHistory: [
     { id: 'emp1', employer: 'NamPower', employeeNumber: 'NP-8842', startDate: '1998-06', endDate: '2012-11' },
@@ -54,7 +55,7 @@ export const seedMatches: MatchRecord[] = [
   {
     id: 'match1',
     beneficiaryId: 'ben1',
-    beneficiaryName: 'Josua Uuyuni',
+    beneficiaryName: 'Maria Doe',
     benefitType: 'Retirement Fund',
     institutionId: 'gipf',
     institutionName: 'Government Institutions Pension Fund (GIPF)',
@@ -76,7 +77,7 @@ export const seedMatches: MatchRecord[] = [
   {
     id: 'match2',
     beneficiaryId: 'ben1',
-    beneficiaryName: 'Josua Uuyuni',
+    beneficiaryName: 'Maria Doe',
     benefitType: 'Pension',
     institutionId: 'namcor-pension',
     institutionName: 'Namcor Pension Fund',
@@ -97,7 +98,7 @@ export const seedMatches: MatchRecord[] = [
   {
     id: 'match3',
     beneficiaryId: 'ben1',
-    beneficiaryName: 'Josua Uuyuni',
+    beneficiaryName: 'Maria Doe',
     benefitType: 'Funeral Benefit',
     institutionId: 'old-mutual-namibia',
     institutionName: 'Old Mutual Namibia',
@@ -122,7 +123,7 @@ export const seedClaims: Claim[] = [
     id: 'OWF-2026-00482',
     matchId: 'match1',
     beneficiaryId: 'ben1',
-    beneficiaryName: 'Josua Uuyuni',
+    beneficiaryName: 'Maria Doe',
     benefitType: 'Retirement Fund',
     institutionId: 'gipf',
     institutionName: 'Government Institutions Pension Fund (GIPF)',
@@ -130,6 +131,10 @@ export const seedClaims: Claim[] = [
     state: 'EVIDENCE_REVIEW',
     potentialValue: 48750,
     amount: 48750,
+    feePercentage: SUCCESS_FEE_PERCENTAGE,
+    estimatedFeeAmount: calculateSuccessFee(48750),
+    feeConsentGiven: true,
+    feeConsentDate: '2026-09-29T08:30:00Z',
     submittedAt: '2026-09-29T08:30:00Z',
     createdAt: '2026-09-29T08:30:00Z',
     updatedAt: '2026-10-02T14:22:00Z',
@@ -164,11 +169,11 @@ export const seedRiskAlerts: RiskAlert[] = [
 
 export const seedAuditEvents: AuditEvent[] = [
   { id: 'ae1', timestamp: '2026-10-03T10:42:00Z', actor: 'Claims Officer (Demo)', action: 'Reviewed claim', target: 'OWF-2026-00482', details: 'Moved claim from Identity Review to Evidence Review' },
-  { id: 'ae2', timestamp: '2026-10-03T10:37:00Z', actor: 'Josua Uuyuni', action: 'Uploaded document', target: 'OWF-2026-00482', details: 'Bank_Statement.pdf uploaded' },
+  { id: 'ae2', timestamp: '2026-10-03T10:37:00Z', actor: 'Maria Doe', action: 'Uploaded document', target: 'OWF-2026-00482', details: 'Bank_Statement.pdf uploaded' },
   { id: 'ae3', timestamp: '2026-10-03T10:12:00Z', actor: 'System', action: 'Identity verification completed', target: 'OWF-2026-00482', details: 'Automated identity check passed' },
   { id: 'ae4', timestamp: '2026-10-02T14:22:00Z', actor: 'System', action: 'State transition', target: 'OWF-2026-00482', details: 'IDENTITY_REVIEW → EVIDENCE_REVIEW' },
-  { id: 'ae5', timestamp: '2026-10-01T11:00:00Z', actor: 'Josua Uuyuni', action: 'Uploaded document', target: 'OWF-2026-00482', details: 'Bank_Statement.pdf needs review' },
-  { id: 'ae6', timestamp: '2026-09-29T08:30:00Z', actor: 'Josua Uuyuni', action: 'Submitted claim', target: 'OWF-2026-00482', details: 'Claim created for Retirement Fund benefit' },
+  { id: 'ae5', timestamp: '2026-10-01T11:00:00Z', actor: 'Maria Doe', action: 'Uploaded document', target: 'OWF-2026-00482', details: 'Bank_Statement.pdf needs review' },
+  { id: 'ae6', timestamp: '2026-09-29T08:30:00Z', actor: 'Maria Doe', action: 'Submitted claim', target: 'OWF-2026-00482', details: 'Claim created for Retirement Fund benefit' },
 ];
 
 export const seedFAQs: FAQ[] = [
@@ -181,12 +186,12 @@ export const seedFAQs: FAQ[] = [
   { id: 'faq7', question: 'Is my information safe?', answer: 'OwaFind protects sensitive information. Your data is encrypted and used only for matching and claims purposes. We do not share your information with third parties without your consent.', category: 'Privacy' },
   { id: 'faq8', question: 'Can I withdraw consent?', answer: 'Yes. You can withdraw consent at any time from your Settings page under Privacy. Withdrawing consent will pause ongoing searches but will not affect claims already submitted.', category: 'Privacy' },
   { id: 'faq9', question: 'What if my claim is rejected?', answer: 'If your claim is rejected, the institution will provide a reason. You may be able to submit an appeal or provide additional information. Check your claim tracking page for details.', category: 'Claims' },
-  { id: 'faq10', question: 'Does OwaFind charge fees?', answer: 'OwaFind is a free service for beneficiaries. There are no charges for searching, matching, or submitting claims.', category: 'General' },
+  { id: 'faq10', question: 'Does OwaFind charge fees?', answer: `Searching and matching are free. If you submit a claim and it is approved and paid, OwaFind charges a success fee of ${SUCCESS_FEE_PERCENTAGE}% of the benefit amount approved and paid. No fee applies if your claim is unsuccessful or unpaid.`, category: 'General' },
 ];
 
 export const seedSupportTickets: SupportTicket[] = [
   { id: 'OWF-4821', subject: 'Question about document requirements', category: 'Claims', status: 'open', createdAt: '2026-10-01T09:00:00Z', updatedAt: '2026-10-01T09:30:00Z', messages: [
-    { author: 'Josua Uuyuni', message: 'I am not sure which documents I need for my retirement fund claim. Can you help?', timestamp: '2026-10-01T09:00:00Z' },
+    { author: 'Maria Doe', message: 'I am not sure which documents I need for my retirement fund claim. Can you help?', timestamp: '2026-10-01T09:00:00Z' },
     { author: 'OwaFind Support', message: 'For a retirement fund claim, you typically need your ID document, proof of employment, and any relevant employment letters. I can see you have already uploaded your ID and employment letter — you are on the right track!', timestamp: '2026-10-01T09:30:00Z' },
   ]},
 ];

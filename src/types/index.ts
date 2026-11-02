@@ -65,6 +65,10 @@ export interface Claim {
   documents: UploadedDocument[];
   timeline: ClaimTimelineEvent[];
   notes?: string;
+  feePercentage: number;
+  estimatedFeeAmount: number;
+  feeConsentGiven: boolean;
+  feeConsentDate: string | null;
 }
 
 export interface ClaimTimelineEvent {

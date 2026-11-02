@@ -7,6 +7,7 @@ import {
   loadLocalWorkspaceState,
   saveLocalWorkspaceState,
 } from './workspaceRepository';
+import { SUCCESS_FEE_PERCENTAGE, calculateSuccessFee } from '@/utils/constants';
 import type {
   AuditEvent,
   BeneficiaryProfile,
@@ -193,6 +194,10 @@ export const claimService = {
       createdAt: now,
       updatedAt: now,
       documents: [],
+      feePercentage: SUCCESS_FEE_PERCENTAGE,
+      estimatedFeeAmount: calculateSuccessFee(match.potentialValue),
+      feeConsentGiven: false,
+      feeConsentDate: null,
       timeline: [{
         id: `${id}-EVENT-1`,
         timestamp: now,
@@ -205,6 +210,9 @@ export const claimService = {
   },
 
   async submitClaim(claim: Claim): Promise<Claim> {
+    if (claim.feeConsentGiven !== true) {
+      throw new Error('The success fee agreement must be accepted before a claim can be submitted.');
+    }
     const now = new Date().toISOString();
     const submitted: Claim = {
       ...claim,

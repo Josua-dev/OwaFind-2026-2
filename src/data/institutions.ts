@@ -71,7 +71,7 @@ function mulberry32(seed: number) {
 
 // Fictional people — no real personal data.
 const FICTIONAL_BENEFICIARIES = [
-  'Josua Uuyuni', 'Pendukeni Hamukwaya', 'Gideon Nepembe', 'Linea Shilongo',
+  'Maria Doe', 'Pendukeni Hamukwaya', 'Gideon Nepembe', 'Linea Shilongo',
   'Kornelius Shipepe', 'Victoria Amukwaya', 'Fanuel Tjirera', 'Selma Amutenya',
   'Barney Haufiku', 'Ndeshi Andreas', 'Mateus Sheya', 'Frieda Namwandi',
   'Kauna Shikwambi', 'Ester Nangolo', 'Johannes Gawanas', 'Rosalia Muvangua',

@@ -11,6 +11,7 @@ import type {
   BenefitRecord,
   BeneficiaryProfile,
 } from '@/types';
+import { SUCCESS_FEE_PERCENTAGE, calculateSuccessFee } from '@/utils/constants';
 
 export const AS_OF_DATE = '2026-10-12';
 export const TOTAL_UNCLAIMED_BALANCE = 218_700_000;
@@ -53,8 +54,8 @@ const institutionCatalog = [
   { id: 'old-mutual-namibia', name: 'Old Mutual Namibia', short: 'Old Mutual', type: 'Insurer', region: 'Windhoek' },
 ] as const;
 
-const firstNames = ['Josua','Pendukeni','Gideon','Linea','Kornelius','Victoria','Fanuel','Selma','Barney','Ndeshi','Mateus','Frieda','Kauna','Ester','Johannes','Rosalia','Petrus','Magrieta','Immanuel','Lukas','Abraham','Sarah','David','Leah','Rachel','Jacob','Benjamin','Joseph','Samuel','Daniel','Moses'];
-const lastNames = ['Uuyuni','Hamukwaya','Nepembe','Shilongo','Shipepe','Amukwaya','Tjirera','Amutenya','Haufiku','Andreas','Sheya','Namwandi','Shikwambi','Nangolo','Gawanas','Muvangua','Ndjarakana','Hoveka','Tjipuka','Mutinga','Nankudhu','Amadhila','Shaningwa','Amukoshi','Ngeleka','Shaetonimwe','Nandjala','Haufiku'];
+const firstNames = ['Maria','Pendukeni','Gideon','Linea','Kornelius','Victoria','Fanuel','Selma','Barney','Ndeshi','Mateus','Frieda','Kauna','Ester','Johannes','Rosalia','Petrus','Magrieta','Immanuel','Lukas','Abraham','Sarah','David','Leah','Rachel','Jacob','Benjamin','Joseph','Samuel','Daniel','Moses'];
+const lastNames = ['Doe','Hamukwaya','Nepembe','Shilongo','Shipepe','Amukwaya','Tjirera','Amutenya','Haufiku','Andreas','Sheya','Namwandi','Shikwambi','Nangolo','Gawanas','Muvangua','Ndjarakana','Hoveka','Tjipuka','Mutinga','Nankudhu','Amadhila','Shaningwa','Amukoshi','Ngeleka','Shaetonimwe','Nandjala','Haufiku'];
 const towns = ['Windhoek','Walvis Bay','Swakopmund','Oshakati','Ongwediva','Rundu','Katima Mulilo','Otjiwarongo','Gobabis','Keetmanshoop','Luderitz','Outjo','Karibib','Rehoboth','Mariental'];
 const benefitKinds: BenefitRecord['type'][] = ['Pension','Retirement Fund','Life Insurance','Funeral Benefit','Employee Benefit','Death Benefit'];
 
@@ -166,6 +167,10 @@ function buildHistoricalClaims(matches: MatchRecord[]): Claim[] {
       submittedAt,
       updatedAt,
       amount: match.potentialValue,
+      feePercentage: SUCCESS_FEE_PERCENTAGE,
+      estimatedFeeAmount: calculateSuccessFee(match.potentialValue),
+      feeConsentGiven: state !== 'DRAFT',
+      feeConsentDate: state !== 'DRAFT' ? submittedAt : null,
       createdAt: submittedAt,
       documents: [],
       timeline,
@@ -470,7 +475,7 @@ export function buildSyntheticWorkspace(): SyntheticWorkspace {
       id: 'OWF-2026-00001',
       matchId: 'MATCH-1',
       beneficiaryId: '01010100076',
-      beneficiaryName: 'Josua Uuyuni',
+      beneficiaryName: 'Maria Doe',
       benefitType: 'Retirement Fund',
       institutionId: 'gipf',
       institutionName: 'Government Institutions Pension Fund (GIPF)',
@@ -480,6 +485,10 @@ export function buildSyntheticWorkspace(): SyntheticWorkspace {
       submittedAt: '2026-09-15T09:00:00.000Z',
       updatedAt: '2026-10-02T14:00:00.000Z',
       amount: 125000,
+      feePercentage: SUCCESS_FEE_PERCENTAGE,
+      estimatedFeeAmount: calculateSuccessFee(125000),
+      feeConsentGiven: true,
+      feeConsentDate: '2026-09-15T09:00:00.000Z',
       createdAt: '2026-09-15T09:00:00.000Z',
       documents: [
         { id: 'DOC-001', name: 'id-document.pdf', type: 'ID Document', size: 245000, uploadStatus: 'verified', uploadedAt: '2026-09-15T09:05:00.000Z', verificationStatus: 'verified' },
@@ -494,7 +503,7 @@ export function buildSyntheticWorkspace(): SyntheticWorkspace {
       id: 'OWF-2026-00002',
       matchId: 'MATCH-2',
       beneficiaryId: '01010100076',
-      beneficiaryName: 'Josua Uuyuni',
+      beneficiaryName: 'Maria Doe',
       benefitType: 'Pension',
       institutionId: 'namcor-pension',
       institutionName: 'Namcor Pension Fund',
@@ -504,6 +513,10 @@ export function buildSyntheticWorkspace(): SyntheticWorkspace {
       submittedAt: '2026-10-09T08:00:00.000Z',
       updatedAt: '2026-10-09T08:00:00.000Z',
       amount: 54000,
+      feePercentage: SUCCESS_FEE_PERCENTAGE,
+      estimatedFeeAmount: calculateSuccessFee(54000),
+      feeConsentGiven: true,
+      feeConsentDate: '2026-10-09T08:00:00.000Z',
       createdAt: '2026-10-09T08:00:00.000Z',
       documents: [],
       timeline: [
@@ -525,6 +538,7 @@ export function buildSyntheticWorkspace(): SyntheticWorkspace {
     referenceNumber: secondMatch.institutionReference,
     potentialValue: secondMatch.potentialValue,
     amount: secondMatch.potentialValue,
+    estimatedFeeAmount: calculateSuccessFee(secondMatch.potentialValue),
   });
   claims.push(...buildHistoricalClaims(matches));
 

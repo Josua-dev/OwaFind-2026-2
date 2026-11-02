@@ -136,19 +136,19 @@ test('shared identities create cross-institution account records without duplica
   expect(workspace.profiles.length).toBeGreaterThan(10_000);
 });
 
-test('Josua discovery returns matches linked to his synthetic accounts', async () => {
+test('Maria discovery returns matches linked to her synthetic accounts', async () => {
   const workspace = buildSyntheticWorkspace();
-  const josua = workspace.profiles.find((profile) => profile.nationalId === '01010100076');
+  const maria = workspace.profiles.find((profile) => profile.nationalId === '01010100076');
 
-  if (!josua) {
-    throw new Error('Expected the synthetic Josua profile to exist.');
+  if (!maria) {
+    throw new Error('Expected the synthetic Maria profile to exist.');
   }
-  expect(josua.dateOfBirth).toBe('2001-01-01');
-  const matches = await benefitService.searchBenefits(josua);
+  expect(maria.dateOfBirth).toBe('2001-01-01');
+  const matches = await benefitService.searchBenefits(maria);
 
   expect(matches.length).toBeGreaterThan(0);
-  expect(matches.every((match) => match.beneficiaryId === josua.nationalId)).toBe(true);
-  expect(matches.every((match) => match.beneficiaryName === 'Josua Uuyuni')).toBe(true);
+  expect(matches.every((match) => match.beneficiaryId === maria.nationalId)).toBe(true);
+  expect(matches.every((match) => match.beneficiaryName === 'Maria Doe')).toBe(true);
   expect(new Set(matches.map((match) => match.institutionId))).toEqual(
     new Set(workspace.institutions.map((institution) => institution.id))
   );
@@ -159,7 +159,7 @@ test('Josua discovery returns matches linked to his synthetic accounts', async (
   ))).toBe(true);
 });
 
-test('saved Josua profile migrates to the updated synthetic identifier', () => {
+test('saved Maria profile migrates to the updated synthetic identifier', () => {
   const baseline = buildSyntheticWorkspace();
   const savedProfile = { ...baseline.profiles[0], nationalId: '04011400076', dateOfBirth: '2001-01-01' };
   const staleResult = { ...baseline.matches[0], beneficiaryId: '04011400076' };

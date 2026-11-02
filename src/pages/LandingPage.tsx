@@ -299,7 +299,7 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-white">Ready to find what may belong to you?</h2>
           <p className="text-primary-200 mt-4 max-w-xl mx-auto">
-            Start your free search today. No obligation, no cost. Your information stays private.
+            Start your free search today. Searching and matching cost nothing and carry no obligation. A 2.5% success fee applies only if a claim is approved and paid. Your information stays private.
           </p>
           <Link to="/login" className="inline-block mt-8">
             <Button size="lg" variant="secondary" className="bg-white text-primary-700 hover:bg-primary-50">

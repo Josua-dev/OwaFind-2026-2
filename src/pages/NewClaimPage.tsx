@@ -5,11 +5,13 @@ import { ArrowLeft, ArrowRight, Check, User, FileCheck, Upload, Send } from 'luc
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
+import { Checkbox } from '@/components/ui/Input';
 import { DocumentUploader } from '@/components/shared/DocumentUploader';
 import { matchService, claimService } from '@/services';
 import { useApp } from '@/context/AppContext';
 import { syntheticWorkspace } from '@/data/synthetic';
 import { cn, formatCurrency } from '@/utils/format';
+import { SUCCESS_FEE_PERCENTAGE, calculateSuccessFee } from '@/utils/constants';
 import type { MatchRecord, Claim } from '@/types';
 
 const claimSteps = [
@@ -32,6 +34,8 @@ export function NewClaimPage() {
   const [identityVerified, setIdentityVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [feeConsent, setFeeConsent] = useState(false);
+  const [feeConsentError, setFeeConsentError] = useState<string | null>(null);
 
   useEffect(() => {
     matchService.getMatch(matchId!).then((m) => {
@@ -61,10 +65,20 @@ export function NewClaimPage() {
       return;
     }
 
+    if (!feeConsent) {
+      setFeeConsentError('You must agree to the success fee to submit this claim.');
+      return;
+    }
+
+    setFeeConsentError(null);
     setSubmitError(null);
     setSubmitting(true);
     try {
-      const submitted = await claimService.submitClaim(draftClaim);
+      const submitted = await claimService.submitClaim({
+        ...draftClaim,
+        feeConsentGiven: true,
+        feeConsentDate: new Date().toISOString(),
+      });
       addClaim(submitted);
       setSubmitting(false);
       navigate(`/app/claims/${submitted.id}`);
@@ -251,10 +265,41 @@ export function NewClaimPage() {
                   <div className="flex justify-between"><span className="text-sm text-slate-500">Identity verified</span><span className="text-sm font-medium text-success-600">Yes</span></div>
                   <div className="flex justify-between"><span className="text-sm text-slate-500">Documents</span><span className="text-sm font-medium text-slate-700">{claimDocs.length} uploaded</span></div>
                 </div>
+                <Card className="border-primary-200 bg-primary-50/40">
+                  <CardBody className="space-y-3">
+                    <h3 className="font-semibold text-sm text-slate-900">Success fee agreement</h3>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Success fee</span>
+                      <span className="text-sm font-medium text-slate-700">{SUCCESS_FEE_PERCENTAGE}% of the amount approved and paid</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Estimated fee (based on potential value)</span>
+                      <span className="text-sm font-medium text-slate-700">{formatCurrency(calculateSuccessFee(match.potentialValue))}</span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      This is an estimate only. The final fee is based on the amount actually approved and paid, not the potential value.
+                    </p>
+                    <ul className="text-sm text-slate-600 space-y-1.5 list-disc pl-5">
+                      <li>No fee applies if the claim is unsuccessful or unpaid.</li>
+                      <li>Searching and matching remain free.</li>
+                    </ul>
+                  </CardBody>
+                </Card>
                 <Alert tone="warning" title="Before you submit">
                   By submitting this claim, you confirm that the information provided is accurate. The institution
                   will review your claim and make the final decision. This process may take several weeks.
                 </Alert>
+                {feeConsentError && <Alert tone="error">{feeConsentError}</Alert>}
+                <div className="bg-white rounded-xl border-2 border-slate-200 p-4">
+                  <Checkbox
+                    checked={feeConsent}
+                    onChange={(checked) => {
+                      setFeeConsent(checked);
+                      if (checked) setFeeConsentError(null);
+                    }}
+                    label={`I agree to pay OwaFind a success fee of ${SUCCESS_FEE_PERCENTAGE}% of the benefit amount approved and paid as a result of this claim. I understand no fee applies if the claim is unsuccessful.`}
+                  />
+                </div>
               </CardBody>
             </Card>
           )}

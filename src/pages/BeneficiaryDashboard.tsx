@@ -165,7 +165,7 @@ export function BeneficiaryDashboard() {
                   {profile.firstName ? profile.firstName[0] : 'J'}{profile.lastName ? profile.lastName[0] : 'U'}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-800">{profile.firstName || 'Josua'} {profile.lastName || 'Uuyuni'}</p>
+                  <p className="text-sm font-medium text-slate-800">{profile.firstName || 'Maria'} {profile.lastName || 'Doe'}</p>
                   <p className="text-xs text-slate-400">{profile.region || 'Windhoek'}</p>
                 </div>
               </div>

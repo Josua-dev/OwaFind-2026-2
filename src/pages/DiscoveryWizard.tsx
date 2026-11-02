@@ -20,6 +20,7 @@ import { Alert } from '@/components/ui/Alert';
 import { useApp } from '@/context/AppContext';
 import { benefitService } from '@/services';
 import { cn } from '@/utils/format';
+import { SUCCESS_FEE_PERCENTAGE } from '@/utils/constants';
 import type { BenefitType, EmploymentEntry } from '@/types';
 
 const steps = [
@@ -309,8 +310,11 @@ export function DiscoveryWizard() {
                   <h2 className="font-display text-lg font-semibold text-slate-900">Consent</h2>
                   <p className="text-sm text-slate-500 mt-0.5">Please review and consent to the search.</p>
                 </div>
+                <Alert tone="info">
+                  Searching is free. A separate {SUCCESS_FEE_PERCENTAGE}% success fee only applies later, if you submit a claim and it is approved and paid.
+                </Alert>
                 <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 space-y-3">
-                  <h3 className="font-semibold text-sm text-slate-800">What information will be searched?</h3>
+                  <h3 className="font-semibold text-sm text-slate-800">What information will be collected and searched?</h3>
                   <ul className="text-sm text-slate-600 space-y-1.5">
                     <li className="flex items-start gap-2"><Check className="w-4 h-4 text-success-500 mt-0.5 shrink-0" /> Your name, date of birth, and national ID</li>
                     <li className="flex items-start gap-2"><Check className="w-4 h-4 text-success-500 mt-0.5 shrink-0" /> Your employment history</li>
@@ -318,8 +322,14 @@ export function DiscoveryWizard() {
                   </ul>
                 </div>
                 <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 space-y-3">
-                  <h3 className="font-semibold text-sm text-slate-800">Why is this required?</h3>
-                  <p className="text-sm text-slate-600">We need this information to search benefit records held by institutions and identify potential matches that may belong to you.</p>
+                  <h3 className="font-semibold text-sm text-slate-800">How your data is used</h3>
+                  <ul className="text-sm text-slate-600 space-y-1.5">
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-success-500 mt-0.5 shrink-0" /> <span><strong>Why:</strong> we use it to search benefit records and identify potential matches that may belong to you.</span></li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-success-500 mt-0.5 shrink-0" /> <span><strong>Who sees it:</strong> your details are shared only with an institution that holds a matched record, and only so it can verify that match.</span></li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-success-500 mt-0.5 shrink-0" /> <span><strong>How long:</strong> kept only while your account is active, and deleted within 30 days after you withdraw consent or close your account.</span></li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-success-500 mt-0.5 shrink-0" /> <span><strong>Never sold:</strong> your data is never sold and never used for advertising.</span></li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-success-500 mt-0.5 shrink-0" /> <span><strong>Your control:</strong> you can withdraw this consent at any time in Settings.</span></li>
+                  </ul>
                 </div>
                 <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 space-y-3">
                   <h3 className="font-semibold text-sm text-slate-800">What OwaFind does</h3>
@@ -342,7 +352,7 @@ export function DiscoveryWizard() {
                   <Checkbox
                     checked={consent}
                     onChange={setConsent}
-                    label="I understand and consent to OwaFind searching for potential benefits that may belong to me."
+                    label="I consent to OwaFind collecting and using the information above to search for potential benefits that may belong to me, and to sharing it with a matched institution only to verify that match. This is separate from the success fee agreement, which I will be asked to accept if I submit a claim."
                   />
                 </div>
               </div>

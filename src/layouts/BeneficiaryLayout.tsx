@@ -109,7 +109,7 @@ export function BeneficiaryLayout({ children }: { children: ReactNode }) {
               JU
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-700 truncate">Josua Uuyuni</p>
+              <p className="text-sm font-medium text-slate-700 truncate">Maria Doe</p>
               <p className="text-xs text-slate-400 truncate">Demo User</p>
             </div>
           </div>

@@ -4,6 +4,7 @@
  * close to its existing types where practical.
  */
 
+import { SUCCESS_FEE_PERCENTAGE, calculateSuccessFee } from '@/utils/constants';
 import type {
   FirmMember,
   PensionHolding,
@@ -283,5 +284,9 @@ export function mapClaimRecord(claim: ClaimRecord, match: MatchRecord | null = n
       },
     ],
     notes: claim.notes,
+    feePercentage: SUCCESS_FEE_PERCENTAGE,
+    estimatedFeeAmount: calculateSuccessFee(claim.amount_claimed ?? 0),
+    feeConsentGiven: true,
+    feeConsentDate: claim.created_at,
   };
 }
