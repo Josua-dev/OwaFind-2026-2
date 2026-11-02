@@ -88,18 +88,42 @@ function mergeClaimsWithBaseline(savedClaims: Claim[] | undefined): Claim[] {
   return [...refreshedBaselineClaims, ...locallyCreatedClaims];
 }
 
+const LEGACY_DEMO_NAME = 'Josua Uuyuni';
+const DEMO_NAME = 'Maria Doe';
+
+/** Renames the old default demo user in data saved in the browser before the rename. */
+function migrateLegacyDemoName<T extends { beneficiaryName: string }>(items: T[]): T[] {
+  return items.map((item) =>
+    item.beneficiaryName === LEGACY_DEMO_NAME ? { ...item, beneficiaryName: DEMO_NAME } : item
+  );
+}
+
+function migrateLegacyDemoProfile(profile: BeneficiaryProfile): BeneficiaryProfile {
+  if (profile.firstName !== 'Josua' || profile.lastName !== 'Uuyuni') return profile;
+  return {
+    ...profile,
+    firstName: 'Maria',
+    lastName: 'Doe',
+    email: profile.email.replace(/^josua\.uuyuni/i, 'maria.doe'),
+  };
+}
+
 export function loadLocalWorkspaceState(): LocalWorkspaceState {
   const existing = readLocalState();
   const storedProfile = existing?.profile ?? DEFAULT_STATE.profile;
-  const profile = ['75031402048', '04011400076'].includes(storedProfile.nationalId)
-    ? { ...storedProfile, nationalId: '01010100076', dateOfBirth: '2001-01-01' }
-    : storedProfile;
-  const searchResults = (existing?.searchResults ?? DEFAULT_STATE.searchResults)
-    .filter((match) => match.beneficiaryId === profile.nationalId);
+  const profile = migrateLegacyDemoProfile(
+    ['75031402048', '04011400076'].includes(storedProfile.nationalId)
+      ? { ...storedProfile, nationalId: '01010100076', dateOfBirth: '2001-01-01' }
+      : storedProfile
+  );
+  const searchResults = migrateLegacyDemoName(
+    (existing?.searchResults ?? DEFAULT_STATE.searchResults)
+      .filter((match) => match.beneficiaryId === profile.nationalId)
+  );
   return {
     ...DEFAULT_STATE,
     ...existing,
-    claims: mergeClaimsWithBaseline(existing?.claims),
+    claims: migrateLegacyDemoName(mergeClaimsWithBaseline(existing?.claims)),
     notifications: existing?.notifications ?? DEFAULT_STATE.notifications,
     documents: existing?.documents ?? DEFAULT_STATE.documents,
     tickets: existing?.tickets ?? DEFAULT_STATE.tickets,
