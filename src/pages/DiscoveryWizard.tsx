@@ -68,6 +68,7 @@ export function DiscoveryWizard() {
   ]);
 
   const [consent, setConsent] = useState(false);
+  const [feeAgreement, setFeeAgreement] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateStep = (s: number): boolean => {
@@ -91,7 +92,8 @@ export function DiscoveryWizard() {
       if (selectedBenefits.length === 0) e.benefits = 'Select at least one benefit type';
     }
     if (s === 4) {
-      if (!consent) e.consent = 'You must consent to proceed';
+      if (!consent) e.consent = 'You must consent to the use of your data to proceed';
+      if (!feeAgreement) e.feeAgreement = 'You must agree to the success fee to proceed';
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -311,7 +313,7 @@ export function DiscoveryWizard() {
                   <p className="text-sm text-slate-500 mt-0.5">Please review and consent to the search.</p>
                 </div>
                 <Alert tone="info">
-                  Searching is free. A separate {SUCCESS_FEE_PERCENTAGE}% success fee only applies later, if you submit a claim and it is approved and paid.
+                  Searching and matching are free. A separate {SUCCESS_FEE_PERCENTAGE}% success fee only applies later, if you submit a claim and it is approved and paid.
                 </Alert>
                 <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 space-y-3">
                   <h3 className="font-semibold text-sm text-slate-800">What information will be collected and searched?</h3>
@@ -352,7 +354,21 @@ export function DiscoveryWizard() {
                   <Checkbox
                     checked={consent}
                     onChange={setConsent}
-                    label="I consent to OwaFind collecting and using the information above to search for potential benefits that may belong to me, and to sharing it with a matched institution only to verify that match. This is separate from the success fee agreement, which I will be asked to accept if I submit a claim."
+                    label="I consent to OwaFind collecting and using the information above to search for potential benefits that may belong to me, and to sharing it with a matched institution only to verify that match."
+                  />
+                </div>
+                {errors.feeAgreement && <Alert tone="error">{errors.feeAgreement}</Alert>}
+                <div className="bg-white rounded-xl border-2 border-slate-200 p-4 space-y-3">
+                  <h3 className="font-semibold text-sm text-slate-800">Success fee agreement</h3>
+                  <ul className="text-sm text-slate-600 space-y-1.5 list-disc pl-5">
+                    <li>Searching and matching are free.</li>
+                    <li>A fee of {SUCCESS_FEE_PERCENTAGE}% applies only to a benefit amount that is approved and paid after you submit a claim.</li>
+                    <li>No fee applies if a claim is unsuccessful or unpaid.</li>
+                  </ul>
+                  <Checkbox
+                    checked={feeAgreement}
+                    onChange={setFeeAgreement}
+                    label={`I agree to pay OwaFind a success fee of ${SUCCESS_FEE_PERCENTAGE}% of the benefit amount approved and paid as a result of any claim I submit through OwaFind. I understand no fee applies if a claim is unsuccessful.`}
                   />
                 </div>
               </div>
