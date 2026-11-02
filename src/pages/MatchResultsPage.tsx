@@ -60,19 +60,19 @@ export function MatchResultsPage() {
           <div className="flex gap-3">
             {matches.filter((m) => m.status === 'green').length > 0 && (
               <div className="text-center">
-                <p className="text-2xl font-bold text-success-600">{matches.filter((m) => m.status === 'green').length}</p>
+                <p className="text-2xl font-bold text-primary-700">{matches.filter((m) => m.status === 'green').length}</p>
                 <p className="text-xs text-slate-500">Strong</p>
               </div>
             )}
             {matches.filter((m) => m.status === 'amber').length > 0 && (
               <div className="text-center">
-                <p className="text-2xl font-bold text-warning-600">{matches.filter((m) => m.status === 'amber').length}</p>
+                <p className="text-2xl font-bold text-slate-600">{matches.filter((m) => m.status === 'amber').length}</p>
                 <p className="text-xs text-slate-500">Review</p>
               </div>
             )}
             {matches.filter((m) => m.status === 'red').length > 0 && (
               <div className="text-center">
-                <p className="text-2xl font-bold text-error-600">{matches.filter((m) => m.status === 'red').length}</p>
+                <p className="text-2xl font-bold text-slate-400">{matches.filter((m) => m.status === 'red').length}</p>
                 <p className="text-xs text-slate-500">Low</p>
               </div>
             )}
@@ -89,7 +89,7 @@ export function MatchResultsPage() {
             transition={{ delay: i * 0.15 }}
           >
             <Card hover className="overflow-hidden">
-              <div className={`h-1 ${match.status === 'green' ? 'bg-success-500' : match.status === 'amber' ? 'bg-warning-500' : 'bg-error-500'}`} />
+              <div className={`h-1 ${match.status === 'green' ? 'bg-primary-600' : match.status === 'amber' ? 'bg-slate-400' : 'bg-slate-200'}`} />
               <div className="p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                   <div>
