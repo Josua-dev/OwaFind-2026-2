@@ -19,7 +19,7 @@ INSERT INTO nbc.members (
     last_updated
 ) VALUES
 -- Synthetic Namibian member records for NBC Retirement Fund
-('75031402048', 'Josua', 'Uuyuni', '1975-03-14', '+264 81 234 5678', 'josua.uuyuni@example.com', 'NBC-2000-1102', 'Namibia Broadcasting Corp', '2000-06-01', NULL, 95000.00, 'active', '2026-10-11'),
+('75031402048', 'Maria', 'Doe', '1975-03-14', '+264 81 234 5678', 'maria.doe@example.com', 'NBC-2000-1102', 'Namibia Broadcasting Corp', '2000-06-01', NULL, 95000.00, 'active', '2026-10-11'),
 ('68091200345', 'Pendukeni', 'Hamukwaya', '1968-09-12', '+264 81 345 6789', 'pendukeni.hamukwaya@test.com', 'NBC-1995-0555', 'NBC News', '1995-03-15', '2010-08-20', 175000.00, 'active', '2026-10-11'),
 ('82110500987', 'Gideon', 'Nepembe', '1982-11-05', '+264 81 456 7890', 'gideon.nepembe@example.org', 'NBC-2005-0882', 'NBC Studios', '2005-07-01', NULL, 48000.00, 'active', '2026-10-11'),
 ('74051801234', 'Linea', 'Shilongo', '1974-05-18', '+264 81 567 8901', 'linea.shilongo@test.com', 'NBC-1998-0221', 'NBC Engineering', '1998-09-10', '2015-03-15', 110000.00, 'dormant', '2026-10-11'),
@@ -62,7 +62,7 @@ INSERT INTO nbc.members (
         'Ryan', 'Laura', 'Kevin', 'Rebecca', 'Brian'),
     -- Last names (common Namibian surnames)
     ELT(FLOOR(1 + (RAND() * 20)),
-        'Muese', 'Shikongo', 'Ngavetene', 'Kazapua', 'Uuyuni', 'Hamukwaya',
+        'Muese', 'Shikongo', 'Ngavetene', 'Kazapua', 'Doe', 'Hamukwaya',
         'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera', 'Amutenya',
         'Haufiku', 'Andreas', 'Shaanika', 'Ndikurapo', 'Mweshipandeka',
         'Kalimbo', 'Shipanga', 'Hamunyela'),
@@ -83,7 +83,7 @@ INSERT INTO nbc.members (
         ) || '.' ||
         SUBSTRING(
             ELT(FLOOR(1 + (RAND() * 20)),
-                'Muese', 'Shikongo', 'Ngavetene', 'Kazapua', 'Uuyuni', 'Hamukwaya',
+                'Muese', 'Shikongo', 'Ngavetene', 'Kazapua', 'Doe', 'Hamukwaya',
                 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera', 'Amutenya',
                 'Haufiku', 'Andreas', 'Shaanika', 'Ndikurapo', 'Mweshipandeka',
                 'Kalimbo', 'Shipanga', 'Hamunyela'

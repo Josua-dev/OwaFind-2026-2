@@ -113,7 +113,7 @@ Spouse Beneficiary:
 ```
 Same Individual Across Institutions:
 - ID: 75031402048
-- Name: Josua Uuyuni
+- Name: Maria Doe
 - DOB: 1975-03-14
 
 GIPF Record:

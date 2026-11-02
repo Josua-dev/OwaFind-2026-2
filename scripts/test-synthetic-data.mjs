@@ -46,8 +46,8 @@ function generateId(prefix, seedModifier = '') {
 
 // Generate deterministic Namibian-style name
 function generateNamibianName(seedModifier = '') {
-  const firstNames = ['Josua', 'Pendukeni', 'Gideon', 'Linea'];
-  const lastNames = ['Uuyuni', 'Hamukwaya', 'Nepembe', 'Shilongo'];
+  const firstNames = ['Maria', 'Pendukeni', 'Gideon', 'Linea'];
+  const lastNames = ['Doe', 'Hamukwaya', 'Nepembe', 'Shilongo'];
 
   const firstName = deterministicChoice(firstNames, `first:${seedModifier}`);
   const lastName = deterministicChoice(lastNames, `last:${seedModifier}`);

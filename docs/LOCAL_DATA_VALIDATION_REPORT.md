@@ -22,7 +22,7 @@ The synthetic local workspace was generated and validated for the as-of date 202
 - Valid date range check: true
 - Deterministic regeneration check: true
 - Local workspace claim persistence check: true
-- Josua discovery returns an account match at all 19 listed institutions: true
+- Maria discovery returns an account match at all 19 listed institutions: true
 - Dashboard/chart aggregates reconcile to the records and claims: true
 - Institution claim and review queues are populated across all 19 institutions: true
 - All six recent monthly claim-volume points and all eight quarterly resolution points contain data: true

@@ -19,7 +19,7 @@ INSERT INTO oldmutual.members (
     last_updated
 ) VALUES
 -- Synthetic Namibian policyholder records for Old Mutual
-('75031402048', 'Josua', 'Uuyuni', '1975-03-14', '+264 81 234 5678', 'josua.uuyuni@example.com', 'OM-2009-1142', 'NamPower', '1998-06-01', '2012-11-30', 15000.00, 'dormant', '2026-10-11'),
+('75031402048', 'Maria', 'Doe', '1975-03-14', '+264 81 234 5678', 'maria.doe@example.com', 'OM-2009-1142', 'NamPower', '1998-06-01', '2012-11-30', 15000.00, 'dormant', '2026-10-11'),
 ('68091200345', 'Pendukeni', 'Hamukwaya', '1968-09-12', '+264 81 345 6789', 'pendukeni.hamukwaya@test.com', 'OM-1995-44210', 'TransNamib', '1995-03-15', '2010-08-20', 75000.00, 'active', '2026-10-11'),
 ('82110500987', 'Gideon', 'Nepembe', '1982-11-05', '+264 81 456 7890', 'gideon.nepembe@example.org', 'OM-2005-77821', 'NamWater', '2005-07-01', NULL, 30000.00, 'active', '2026-10-11'),
 ('74051801234', 'Linea', 'Shilongo', '1974-05-18', '+264 81 567 8901', 'linea.shilongo@test.com', 'OM-1998-22105', 'NamPower', '1998-09-10', '2015-03-15', 45000.00, 'active', '2026-10-11'),
@@ -87,8 +87,8 @@ INSERT INTO oldmutual.members (
 FROM (
     -- Select from GIPF synthetic data to create cross-institution matches for some individuals
     SELECT
-        '75031402048' as id_number, 'Josua' as first_name, 'Uuyuni' as last_name, '1975-03-14' as date_of_birth,
-        '+264 81 234 5678' as phone, 'josua.uuyuni@example.com' as email
+        '75031402048' as id_number, 'Maria' as first_name, 'Doe' as last_name, '1975-03-14' as date_of_birth,
+        '+264 81 234 5678' as phone, 'maria.doe@example.com' as email
     UNION ALL
     SELECT '68091200345', 'Pendukeni', 'Hamukwaya', '1968-09-12', '+264 81 345 6789', 'pendukeni.hamukwaya@test.com'
     UNION ALL
@@ -124,7 +124,7 @@ SELECT
         'Patricia', 'Thomas', 'Barbara', 'Charles', 'Susan'),
     -- Last names
     ELT(FLOOR(1 + (RAND() * 20)),
-        'Uuyuni', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera',
+        'Doe', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera',
         'Amutenya', 'Haufiku', 'Andreas', 'Sheya', 'Namwandi', 'Shikwambi', 'Nangolo',
         'Gawanas', 'Muvangua', 'Ndjarakana', 'Hoveka', 'Tjipuka', 'Mutinga'),
     -- Date of birth
@@ -143,7 +143,7 @@ SELECT
             'patricia', 'thomas', 'barbara', 'charles', 'susan'),
         '.',
         ELT(FLOOR(1 + (RAND() * 20)),
-            'uuyuni', 'hamukwaya', 'nepembe', 'shilongo', 'shipepe', 'amukwaya', 'tjirera',
+            'doe', 'hamukwaya', 'nepembe', 'shilongo', 'shipepe', 'amukwaya', 'tjirera',
             'amutenya', 'haufiku', 'andreas', 'sheya', 'namwandi', 'shikwambi', 'nangolo',
             'gawanas', 'muvangua', 'ndjarakana', 'hoveka', 'tjipuka', 'mutinga'),
         '@',

@@ -136,7 +136,7 @@ function createRNG(seed) {
 // Generate fictional beneficiary names
 function generateFictionalBeneficiaries(count, rng) {
   const firstNames = [
-    'Josua', 'Pendukeni', 'Gideon', 'Linea', 'Kornelius', 'Victoria', 'Fanuel', 'Selma',
+    'Maria', 'Pendukeni', 'Gideon', 'Linea', 'Kornelius', 'Victoria', 'Fanuel', 'Selma',
     'Barney', 'Ndeshi', 'Mateus', 'Frieda', 'Kauna', 'Ester', 'Johannes', 'Rosalia',
     'Petrus', 'Magrieta', 'Immanuel', 'Lukas', 'Abraham', 'Sarah', 'David', 'Rachel',
     'Samuel', 'Leah', 'Joseph', 'Rebecca', 'Benjamin', 'Rachel', 'Isaac', 'Rebekah',
@@ -145,7 +145,7 @@ function generateFictionalBeneficiaries(count, rng) {
   ];
 
   const lastNames = [
-    'Uuyuni', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera', 'Amutenya',
+    'Doe', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera', 'Amutenya',
     'Haufiku', 'Andreas', 'Sheya', 'Namwandi', 'Shikwambi', 'Namwandi', 'Nangolo', 'Gawanas', 'Muvangua',
     'Ndjarakana', 'Hoveka', 'Tjipuka', 'Mutinga', 'Aman', 'Goagoseb', 'Gorasesb', 'Gonteb',
     'Haihambo', 'Handunge', 'Hanga', 'Heita', 'Hidengo', 'Hifikepunye', 'Hood', 'Kamati',

@@ -88,7 +88,7 @@ INSERT OR IGNORE INTO nbc.members (
     id_number, first_name, last_name, date_of_birth, phone, email,
     ref_number, employer, date_joined, date_left, balance_nad, status, last_updated
 ) VALUES
-('75031402048', 'Josua', 'Uuyuni', '1975-03-14', '+264 81 234 5678', 'josua.uuyuni@example.com',
+('75031402048', 'Maria', 'Doe', '1975-03-14', '+264 81 234 5678', 'maria.doe@example.com',
  'NBC-2000-1102', 'NBC News', '2000-06-01', NULL, 95000.00, 'active', '2026-10-11');
 
 -- ============================================================================

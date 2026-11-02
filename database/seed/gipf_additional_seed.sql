@@ -19,7 +19,7 @@ INSERT INTO gipf.members (
     last_updated
 ) VALUES
 -- Synthetic Namibian member records for GIPF
-('75031402048', 'Josua', 'Uuyuni', '1975-03-14', '+264 81 234 5678', 'josua.uuyuni@example.com', 'GIPF-2012-8842', 'NamPower', '1998-06-01', '2012-11-30', 48750.00, 'dormant', '2026-10-11'),
+('75031402048', 'Maria', 'Doe', '1975-03-14', '+264 81 234 5678', 'maria.doe@example.com', 'GIPF-2012-8842', 'NamPower', '1998-06-01', '2012-11-30', 48750.00, 'dormant', '2026-10-11'),
 ('68091200345', 'Pendukeni', 'Hamukwaya', '1968-09-12', '+264 81 345 6789', 'pendukeni.hamukwaya@test.com', 'GIPF-1995-1102', 'TransNamib', '1995-03-15', '2010-08-20', 125000.00, 'active', '2026-10-11'),
 ('82110500987', 'Gideon', 'Nepembe', '1982-11-05', '+264 81 456 7890', 'gideon.nepembe@example.org', 'GIPF-2005-0331', 'NamWater', '2005-07-01', NULL, 34200.00, 'active', '2026-10-11'),
 ('74051801234', 'Linea', 'Shilongo', '1974-05-18', '+264 81 567 8901', 'linea.shilongo@test.com', 'GIPF-1998-0772', 'NamPower', '1998-09-10', '2015-03-15', 78900.00, 'dormant', '2026-10-11'),
@@ -61,7 +61,7 @@ INSERT INTO gipf.members (
         'Patricia', 'Thomas', 'Barbara', 'Charles', 'Susan'),
     -- Last names (common Namibian surnames)
     ELT(FLOOR(1 + (RAND() * 20)),
-        'Uuyuni', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera',
+        'Doe', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera',
         'Amutenya', 'Haufiku', 'Andreas', 'Sheya', 'Namwandi', 'Shikwambi', 'Nangolo',
         'Gawanas', 'Muvangua', 'Ndjarakana', 'Hoveka', 'Tjipuka', 'Mutinga'),
     -- Date of birth
@@ -80,7 +80,7 @@ INSERT INTO gipf.members (
             'patricia', 'thomas', 'barbara', 'charles', 'susan'),
         '.',
         ELT(FLOOR(1 + (RAND() * 20)),
-            'uuyuni', 'hamukwaya', 'nepembe', 'shilongo', 'shipepe', 'amukwaya', 'tjirera',
+            'doe', 'hamukwaya', 'nepembe', 'shilongo', 'shipepe', 'amukwaya', 'tjirera',
             'amutenya', 'haufiku', 'andreas', 'sheya', 'namwandi', 'shikwambi', 'nangolo',
             'gawanas', 'muvangua', 'ndjarakana', 'hoveka', 'tjipuka', 'mutinga'),
         '@',
@@ -151,7 +151,7 @@ INSERT INTO gipf.members (
         'Matthew', 'Ashley', 'Christopher'),
     -- Last names
     ELT(FLOOR(1 + (RAND() * 25)),
-        'Uuyuni', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera',
+        'Doe', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera',
         'Amutenya', 'Haufiku', 'Andreas', 'Sheya', 'Namwandi', 'Shikwambi', 'Nangolo',
         'Gawanas', 'Muvangua', 'Ndjarakana', 'Hoveka', 'Tjipuka', 'Mutinga', 'Simpson',
         'Jacobs', 'Botha', 'Smith', 'Johnson'),
@@ -171,7 +171,7 @@ INSERT INTO gipf.members (
             'patricia', 'thomas', 'barbara', 'charles', 'susan', 'daniel', 'jessica',
             'matthew', 'ashley', 'christopher'), 1, 1),
         SUBSTRING(ELT(FLOOR(1 + (RAND() * 25)),
-            'uuyuni', 'hamukwaya', 'nepembe', 'shilongo', 'shipepe', 'amukwaya', 'tjirera',
+            'doe', 'hamukwaya', 'nepembe', 'shilongo', 'shipepe', 'amukwaya', 'tjirera',
             'amutenya', 'haufiku', 'andreas', 'sheya', 'namwandi', 'shikwambi', 'nangolo',
             'gawanas', 'muvangua', 'ndjarakana', 'hoveka', 'tjipuka', 'mutinga', 'simpson',
             'jacobs', 'botha', 'smith', 'johnson'), 1, 3),
@@ -248,7 +248,7 @@ INSERT INTO gipf.members (
         'Joshua', 'Nicole'),
     -- Last names (expanded list)
     ELT(FLOOR(1 + (RAND() * 30)),
-        'Uuyuni', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera',
+        'Doe', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera',
         'Amutenya', 'Haufiku', 'Andreas', 'Sheya', 'Namwandi', 'Shikwambi', 'Nangolo',
         'Gawanas', 'Muvangua', 'Ndjarakana', 'Hoveka', 'Tjipuka', 'Mutinga', 'Simpson',
         'Jacobs', 'Botha', 'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller',
@@ -271,7 +271,7 @@ INSERT INTO gipf.members (
             'joshua', 'nicole'), 1, 2),
         '.',
         SUBSTRING(ELT(FLOOR(1 + (RAND() * 30)),
-            'uuyuni', 'hamukwaya', 'nepembe', 'shilongo', 'shipepe', 'amukwaya', 'tjirera',
+            'doe', 'hamukwaya', 'nepembe', 'shilongo', 'shipepe', 'amukwaya', 'tjirera',
             'amutenya', 'haufiku', 'andreas', 'sheya', 'namwandi', 'shikwambi', 'nangolo',
             'gawanas', 'muvangua', 'ndjarakana', 'hoveka', 'tjipuka', 'mutinga', 'simpson',
             'jacobs', 'botha', 'smith', 'johnson', 'williams', 'brown', 'jones', 'miller',

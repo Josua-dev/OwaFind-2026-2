@@ -45,7 +45,7 @@ INSERT INTO nbc.members (
 
 -- Scenario 5: Cross-institution matching - Same individual appears in multiple institutions
 -- This ID appears in GIPF, Sanlam, Old Mutual, and now NBC
-('75031402048', 'Josua', 'Uuyuni', '1975-03-14', '+264 81 234 5678', 'josua.uuyuni@example.com', 'NBC-2000-1102', 'NBC News', '2000-06-01', NULL, 95000.00, 'active', '2026-10-11'),
+('75031402048', 'Maria', 'Doe', '1975-03-14', '+264 81 234 5678', 'maria.doe@example.com', 'NBC-2000-1102', 'NBC News', '2000-06-01', NULL, 95000.00, 'active', '2026-10-11'),
 
 -- Additional synthetic records to reach target count
 -- Using patterned data generation for efficiency
@@ -83,7 +83,7 @@ INSERT INTO nbc.members (
         'Ryan', 'Laura', 'Kevin', 'Rebecca', 'Brian'),
     -- Last names (common Namibian surnames)
     ELT(FLOOR(1 + (RAND() * 20)),
-        'Muese', 'Shikongo', 'Ngavetene', 'Kazapua', 'Uuyuni', 'Hamukwaya',
+        'Muese', 'Shikongo', 'Ngavetene', 'Kazapua', 'Doe', 'Hamukwaya',
         'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera', 'Amutenya',
         'Haufiku', 'Andreas', 'Shaanika', 'Ndikurapo', 'Mweshipandeka',
         'Kalimbo', 'Shipanga', 'Hamunyela'),
@@ -104,7 +104,7 @@ INSERT INTO nbc.members (
         ) || '.' ||
         SUBSTRING(
             ELT(FLOOR(1 + (RAND() * 20)),
-                'Muese', 'Shikongo', 'Ngavetene', 'Kazapua', 'Uuyuni', 'Hamukwaya',
+                'Muese', 'Shikongo', 'Ngavetene', 'Kazapua', 'Doe', 'Hamukwaya',
                 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya', 'Tjirera', 'Amutenya',
                 'Haufiku', 'Andreas', 'Shaanika', 'Ndikurapo', 'Mweshipandeka',
                 'Kalimbo', 'Shipanga', 'Hamunyela')

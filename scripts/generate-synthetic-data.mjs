@@ -117,7 +117,7 @@ function generateId(prefix, seedModifier = '') {
 // Generate deterministic Namibian-style name
 function generateNamibianName(seedModifier = '') {
   const firstNames = [
-    'Josua', 'Pendukeni', 'Gideon', 'Linea', 'Kornelius', 'Victoria',
+    'Maria', 'Pendukeni', 'Gideon', 'Linea', 'Kornelius', 'Victoria',
     'Fanuel', 'Selma', 'Barney', 'Ndeshi', 'Mateus', 'Frieda', 'Kauna',
     'Ester', 'Johannes', 'Rosalia', 'Petrus', 'Magrieta', 'Immanuel',
     'Lukas', 'Abraham', 'Sarah', 'David', 'Leah', 'Rachel', 'Jacob',
@@ -126,7 +126,7 @@ function generateNamibianName(seedModifier = '') {
   ];
 
   const lastNames = [
-    'Uuyuni', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya',
+    'Doe', 'Hamukwaya', 'Nepembe', 'Shilongo', 'Shipepe', 'Amukwaya',
     'Tjirera', 'Amutenya', 'Haufiku', 'Andreas', 'Sheya', 'Namwandi',
     'Shikwambi', 'Nangolo', 'Gawanas', 'Muvangua', 'Ndjarakana', 'Hoveka',
     'Tjipuka', 'Mutinga', 'Nankudhu', 'Shaningwa', 'Amadhila', 'Amukoshi',
